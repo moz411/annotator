@@ -187,8 +187,6 @@ canvas.addEventListener('mousedown', e => {
             // select this shape
             selectedShapeIndex = i;
             var selectedShape = shapes[selectedShapeIndex];
-            console.log("down " + selectedShapeIndex);
-            console.log(selectedShape);
         }
     }
 });
@@ -210,13 +208,9 @@ canvas.addEventListener('mousemove', e => {
     // how far has the mouse dragged from its previous mousemove position?
     var dx = mouseX - startX;
     var dy = mouseY - startY;
-    if(selectedShapeIndex) {
+    if(Number.isInteger(selectedShapeIndex)) {
         // move the selected shape by the drag distance
         selectedShape = shapes[selectedShapeIndex];
-        //selectedShape.startX += dx;
-        //selectedShape.startY += dy;
-        //drawAll();
-        console.log("move " + selectedShapeIndex);
     } else {
         drawAll();
         ctx.strokeRect(startX, startY, dx, dy);
@@ -234,20 +228,19 @@ canvas.addEventListener('mouseup', e => {
     var dy = mouseY - startY;
     // the drag is over -- clear the isDragging flag
     isDragging = false;
-    if(selectedShapeIndex) {
+    if(Number.isInteger(selectedShapeIndex)) {
         // move the selected shape by the drag distance
         selectedShape = shapes[selectedShapeIndex];
         selectedShape.startX += dx;
         selectedShape.startY += dy;
         drawAll();
-        console.log("up " + selectedShapeIndex);
-        console.log(selectedShape);
         selectedShapeIndex = false;
     } else {
         drawAll();
         ctx.strokeRect(startX, startY, dx, dy);
         shapes.push({startX, startY, dx , dy});
     }
+    console.log(shapes);
 });
 </script>
 
