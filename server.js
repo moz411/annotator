@@ -9,7 +9,7 @@ const HOST = '0.0.0.0';
 // App
 const app = express();
 app.use('/lib', express.static('lib'));
-app.use('/docs', express.static('docs'));
+app.use('/dataset', express.static('dataset'));
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });

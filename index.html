@@ -28,7 +28,7 @@
   // If absolute URL from the remote server is provided, configure the CORS
   // header on that server.
   //
-  var url = './docs/output-7.pdf';
+  var url = './dataset/testfile.pdf';
 
   //
   // The workerSrc property shall be specified.
@@ -44,7 +44,7 @@
     //
     // Fetch the first page
     //
-    pdf.getPage(1).then(function(page) {
+    pdf.getPage(6).then(function(page) {
       var scale = .9;
       var viewport = page.getViewport({ scale: scale, });
 
@@ -138,11 +138,10 @@ canvas.onresize = function(e){ reOffset(); }
 var shapes = [];
 
 // drag related vars
-var isDragging = false;
+var isDragging = false, handlesSize = 8, currentHandle = false, selectedShapeIndex = false;
 var startX, startY;
 
-// hold the index of the shape being dragged (if any)
-var selectedShapeIndex = false;
+
 
 // draw the shapes on the canvas
 drawAll();
@@ -173,6 +172,42 @@ function drawAll() {
         ctx.strokeRect(shape.startX, shape.startY, shape.dx, shape.dy);
         }
 }
+
+function dist(p1, p2) {
+    return Math.sqrt((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y));
+}
+
+function point(x, y) {
+    return {
+        x: x,
+        y: y
+    };
+}
+
+function getHandle(mouse) {
+    if (dist(mouse, point(rect.x, rect.y)) <= handlesSize) return 'topleft';
+    if (dist(mouse, point(rect.x + rect.w, rect.y)) <= handlesSize) return 'topright';
+    if (dist(mouse, point(rect.x, rect.y + rect.h)) <= handlesSize) return 'bottomleft';
+    if (dist(mouse, point(rect.x + rect.w, rect.y + rect.h)) <= handlesSize) return 'bottomright';
+    if (dist(mouse, point(rect.x + rect.w / 2, rect.y)) <= handlesSize) return 'top';
+    if (dist(mouse, point(rect.x, rect.y + rect.h / 2)) <= handlesSize) return 'left';
+    if (dist(mouse, point(rect.x + rect.w / 2, rect.y + rect.h)) <= handlesSize) return 'bottom';
+    if (dist(mouse, point(rect.x + rect.w, rect.y + rect.h / 2)) <= handlesSize) return 'right';
+    return false;
+}
+
+// get shapes from Google Vision output
+//fetch("./dataset/testfile.json", response => {
+//        response.json(dataset => {
+//                console.log("dataset " + dataset.length)
+//       }});
+
+fetch('./dataset/testfile.json')
+.then(response => response.json())
+.then(response => { 
+        console.log("dataset " + response.inputConfig.mimeType);
+})
+.catch(error => console.log("Erreur : " + error));
 
 canvas.addEventListener('mousedown', e => {
     isDragging = true;
@@ -240,7 +275,6 @@ canvas.addEventListener('mouseup', e => {
         ctx.strokeRect(startX, startY, dx, dy);
         shapes.push({startX, startY, dx , dy});
     }
-    console.log(shapes);
 });
 </script>
 
