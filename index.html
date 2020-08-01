@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Annotator</title>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.min.js"></script>
+  <style>
+        #container { position: relative; }
+        #container canvas, #overlay { position: absolute; }
+        canvas { border: 1px solid black; }
+  </style>
+
+</head>
+<body>
+
+<div id="container">
+  <canvas id="pdfcanvas"></canvas>
+  <canvas id="overlay"></canvas>
+</div>
+
+<div>
+        <br/>
+</div>
+
+<script> 
+
+  //
+  // If absolute URL from the remote server is provided, configure the CORS
+  // header on that server.
+  //
+  var url = './docs/output-7.pdf';
+
+  //
+  // The workerSrc property shall be specified.
+  //
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
+
+  //
+  // Asynchronous download PDF
+  //
+  var loadingTask = pdfjsLib.getDocument(url);
+  loadingTask.promise.then(function(pdf) {
+    //
+    // Fetch the first page
+    //
+    pdf.getPage(1).then(function(page) {
+      var scale = .9;
+      var viewport = page.getViewport({ scale: scale, });
+
+      //
+      // Prepare canvas using PDF page dimensions
+      //
+      var canvas = document.getElementById('pdfcanvas');
+      var context = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      var drawcanvas = document.getElementById("overlay");
+      drawcanvas.width = viewport.width;
+      drawcanvas.height = viewport.height;
+
+      //
+      // Render PDF page into canvas context
+      //
+      var renderContext = {
+        canvasContext: context,
+        viewport: viewport,
+      };
+      //context.fillStyle = 'rgb(255, 0, 0)';
+      //context.fillRect(50, 50, 100, 150);
+      page.render(renderContext);
+    });
+  });
+</script>
+<!--
+<script>
+  var canvas = document.getElementById('pdfcanvas');
+  var ctx = canvas.getContext('2d');
+  var imagedata = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  canvas.style.cursor = "crosshair";
+  ctx.setLineDash([6]);
+  drag = false;
+  //setInterval(function() {update()}, 10);
+
+  rect = canvas.getBoundingClientRect();
+
+  canvas.addEventListener('mousedown', e => {
+        startX = e.clientX - rect.left;
+        startY = e.clientY - rect.top;
+        drag  = true;
+    });
+
+ 
+ canvas.addEventListener('mousemove', e => {
+        if (drag) {
+          width = e.clientX - startX;
+          height = e.clientY - startY;
+          //ctx.strokeRect(startX, startY, width, height);
+          //ctx.putImageData(imagedata, 0, 0, 0, 0, canvas.width, canvas.height);
+          //ctx.clearRect(0,0,canvas.width,canvas.height); //clear canvas
+          ctx.beginPath();
+          //ctx.rect(startX, startY, width,height);
+          //ctx.stroke();
+           }
+    });
+
+ canvas.addEventListener('mouseup', e => {
+        width = e.clientX - startX;
+        height = e.clientY - startY;
+        ctx.strokeRect(startX, startY, width , height)
+        drag = false;
+    });
+
+</script>
+-->
+<script>
+// https://riptutorial.com/html5-canvas/example/18918/dragging-circles---rectangles-around-the-canvas
+  // canvas related vars
+var canvas = document.getElementById("overlay");
+var ctx = canvas.getContext("2d");
+ctx.save();
+var cw = canvas.width;
+var ch = canvas.height;
+var imagedata = ctx.getImageData(0, 0, canvas.width, canvas.height)
+
+// used to calc canvas position relative to window
+function reOffset() {
+    var BB = canvas.getBoundingClientRect();
+    offsetX = BB.left;
+    offsetY = BB.top;        
+}
+var offsetX,offsetY;
+reOffset();
+window.onscroll = function(e){ reOffset(); }
+window.onresize = function(e){ reOffset(); }
+canvas.onresize = function(e){ reOffset(); }
+
+// save relevant information about shapes drawn on the canvas
+var shapes = [];
+
+// drag related vars
+var isDragging = false;
+var startX, startY;
+
+// hold the index of the shape being dragged (if any)
+var selectedShapeIndex = false;
+
+// draw the shapes on the canvas
+drawAll();
+
+
+// given mouse X & Y (mx & my) and shape object
+// return true/false whether mouse is inside the shape
+function isMouseInShape(mx, my, shape) {
+        var rLeft = shape.startX;
+        var rRight = shape.startX + shape.dx;
+        var rTop = shape.startY;
+        var rBott = shape.startY + shape.dy;
+        // math test to see if mouse is inside rectangle
+        if( mx>rLeft && mx<rRight && my>rTop && my<rBott){
+            return(true);
+        }
+    // the mouse isn't in any of the shapes
+    return(false);
+}
+
+// clear the canvas and 
+// redraw all shapes in their current positions
+function drawAll() {
+     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for(var i=0; i<shapes.length; i++) {
+        var shape = shapes[i];
+        ctx.strokeRect(shape.startX, shape.startY, shape.dx, shape.dy);
+        }
+}
+
+canvas.addEventListener('mousedown', e => {
+    isDragging = true;
+    // calculate the current mouse position
+    startX = parseInt(e.clientX - offsetX);
+    startY = parseInt(e.clientY - offsetY);
+    // test mouse position against all shapes
+    // post result if mouse is in a shape
+    for(var i=0; i < shapes.length; i++) {
+        if(isMouseInShape(startX, startY, shapes[i])) {
+            // the mouse is inside this shape
+            // select this shape
+            selectedShapeIndex = i;
+            console.log(selectedShapeIndex);
+        }
+    }
+});
+
+canvas.addEventListener('mouseout', e => {
+    // return if we're not dragging
+    if(!isDragging){return;}
+    // the drag is over -- clear the isDragging flag
+    isDragging = false;
+    selectedShapeIndex = false;
+});
+
+canvas.addEventListener('mousemove', e => {
+    // return if we're not dragging
+    if(!isDragging){return;}
+    // calculate the current mouse position         
+    mouseX = parseInt(e.clientX - offsetX);
+    mouseY = parseInt(e.clientY - offsetY);
+    // how far has the mouse dragged from its previous mousemove position?
+    var dx = mouseX - startX;
+    var dy = mouseY - startY;
+    if(selectedShapeIndex) {
+        // move the selected shape by the drag distance
+        var selectedShape = shapes[selectedShapeIndex];
+        selectedShape.x += dx;
+        selectedShape.y += dy;// clear the canvas and redraw all shapes
+    } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeRect(startX, startY, dx, dy);
+        drawAll();
+    }
+});
+    
+canvas.addEventListener('mouseup', e => {
+    // return if we're not dragging
+    if(!isDragging){return;}
+    // calculate the current mouse position         
+    mouseX = parseInt(e.clientX - offsetX);
+    mouseY = parseInt(e.clientY - offsetY);
+    // how far has the mouse dragged from its previous mousemove position?
+    var dx = mouseX - startX;
+    var dy = mouseY - startY;
+    // the drag is over -- clear the isDragging flag
+    isDragging = false;
+    selectedShapeIndex = false;
+    ctx.strokeRect(startX, startY, dx , dy);
+    shapes.push({startX, startY, dx , dy});
+});
+</script>
+
+</body>
+</html>
