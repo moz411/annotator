@@ -119,10 +119,8 @@
   // canvas related vars
 var canvas = document.getElementById("overlay");
 var ctx = canvas.getContext("2d");
-ctx.save();
 var cw = canvas.width;
 var ch = canvas.height;
-var imagedata = ctx.getImageData(0, 0, canvas.width, canvas.height)
 
 // used to calc canvas position relative to window
 function reOffset() {
@@ -188,7 +186,9 @@ canvas.addEventListener('mousedown', e => {
             // the mouse is inside this shape
             // select this shape
             selectedShapeIndex = i;
-            console.log(selectedShapeIndex);
+            var selectedShape = shapes[selectedShapeIndex];
+            console.log("down " + selectedShapeIndex);
+            console.log(selectedShape);
         }
     }
 });
@@ -212,13 +212,14 @@ canvas.addEventListener('mousemove', e => {
     var dy = mouseY - startY;
     if(selectedShapeIndex) {
         // move the selected shape by the drag distance
-        var selectedShape = shapes[selectedShapeIndex];
-        selectedShape.x += dx;
-        selectedShape.y += dy;// clear the canvas and redraw all shapes
+        selectedShape = shapes[selectedShapeIndex];
+        //selectedShape.startX += dx;
+        //selectedShape.startY += dy;
+        //drawAll();
+        console.log("move " + selectedShapeIndex);
     } else {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeRect(startX, startY, dx, dy);
         drawAll();
+        ctx.strokeRect(startX, startY, dx, dy);
     }
 });
     
@@ -233,9 +234,20 @@ canvas.addEventListener('mouseup', e => {
     var dy = mouseY - startY;
     // the drag is over -- clear the isDragging flag
     isDragging = false;
-    selectedShapeIndex = false;
-    ctx.strokeRect(startX, startY, dx , dy);
-    shapes.push({startX, startY, dx , dy});
+    if(selectedShapeIndex) {
+        // move the selected shape by the drag distance
+        selectedShape = shapes[selectedShapeIndex];
+        selectedShape.startX += dx;
+        selectedShape.startY += dy;
+        drawAll();
+        console.log("up " + selectedShapeIndex);
+        console.log(selectedShape);
+        selectedShapeIndex = false;
+    } else {
+        drawAll();
+        ctx.strokeRect(startX, startY, dx, dy);
+        shapes.push({startX, startY, dx , dy});
+    }
 });
 </script>
 
