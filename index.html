@@ -31,7 +31,7 @@
   // header on that server.
   //
   var url = './dataset/testfile.pdf';
-  var pagenum = 1;
+  var pagenum = 6;
 
   //
   // The workerSrc property shall be specified.
@@ -81,14 +81,11 @@
       var url = './dataset/testfile.json';
 
       // save relevant information about shapes drawn on the canvas
-      var shapes = [];
+      var shapes = [], deletekeys = [46, 8];
 
       // drag related vars
-      var isDragging=false, handlesSize=8, currentHandle=false, selectedShapeIndex=false;
+      var isDragging=false, handlesSize=8, currentHandle=false, selectedShape=0, selectedShapeIndex=false;
       var startX, startY;
-
-      //  dragging rectangle
-      rect = { x: 150, y: 100, w: 123, h: 58 };
 
       // redraw overlay shape every 5ms
       var refreshOverlay = setInterval(drawAll, 10);
@@ -98,7 +95,7 @@
         var BB = canvas.getBoundingClientRect();
         offsetX = BB.left;
         offsetY = BB.top;        
-      }
+      };
       var offsetX, offsetY;
       reOffset();
       window.onscroll = function(e){ reOffset(); }
@@ -118,7 +115,7 @@
           }
         // the mouse isn't in any of the shapes
         return(false);
-      }
+      };
 
       // clear the canvas and 
       // redraw all shapes in their current positions
@@ -127,49 +124,33 @@
         context.clearRect(0, 0, canvas.width, canvas.height);
         for(var i=0; i<shapes.length; i++) {
             var shape = shapes[i];
+            if (shape == selectedShape) {context.lineWidth = 2 } else {context.lineWidth = 1};
             context.strokeRect(shape.startX, shape.startY, shape.dx, shape.dy);
             }
-      }
+      };
 
-
-
-      function dist(p1, p2) {
-          return Math.sqrt((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y));
-      }
-
-      function point(x, y) {
-          return {
-              x: x,
-              y: y
-          };
-      }
-
-      function getHandle(mouse) {
-          if (dist(mouse, point(rect.x, rect.y)) <= handlesSize) return 'topleft';
-          if (dist(mouse, point(rect.x + rect.w, rect.y)) <= handlesSize) return 'topright';
-          if (dist(mouse, point(rect.x, rect.y + rect.h)) <= handlesSize) return 'bottomleft';
-          if (dist(mouse, point(rect.x + rect.w, rect.y + rect.h)) <= handlesSize) return 'bottomright';
-          if (dist(mouse, point(rect.x + rect.w / 2, rect.y)) <= handlesSize) return 'top';
-          if (dist(mouse, point(rect.x, rect.y + rect.h / 2)) <= handlesSize) return 'left';
-          if (dist(mouse, point(rect.x + rect.w / 2, rect.y + rect.h)) <= handlesSize) return 'bottom';
-          if (dist(mouse, point(rect.x + rect.w, rect.y + rect.h / 2)) <= handlesSize) return 'right';
-          return false;
-      }
+      // distance from a corner
+      function dist(x1,y1,x2,y2) { 
+        if(!x2) x2=0; 
+        if(!y2) y2=0;
+        return Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)); 
+      };
 
       // get shapes from Google Vision generated json
       fetch(url)
       .then(response => response.json())
       .then(response => { 
           var blocks = response.responses[pagenum-1].fullTextAnnotation.pages[0].blocks;
+          var marge = 5;
           for (var i=0; i < blocks.length; i++) {
                   var coords = blocks[i].boundingBox.normalizedVertices;
                   // convert normalizedVertices to regular coords
                   coords = coords.map(function(element) { return [element.x * canvas.width, 
                                                                   element.y * canvas.height] });
-                  startX = coords[0][0];
-                  startY = coords[0][1];
-                  dx = coords[2][0] - coords[0][0];
-                  dy = coords[2][1] - coords[0][1];
+                  startX = coords[0][0] - marge;
+                  startY = coords[0][1] - marge;
+                  dx = coords[2][0] - coords[0][0] + marge*2;
+                  dy = coords[2][1] - coords[0][1] + marge*2;
                   shapes.push({startX, startY, dx , dy});
           }
       })
@@ -178,6 +159,7 @@
 
 
       canvas.addEventListener('mousedown', e => {
+          selectedShapeIndex = false;
           clearInterval(refreshOverlay);
           isDragging = true;
           // calculate the current mouse position
@@ -190,7 +172,8 @@
                   // the mouse is inside this shape
                   // select this shape
                   selectedShapeIndex = i;
-                  var selectedShape = shapes[selectedShapeIndex];
+                  selectedShape = shapes[selectedShapeIndex];
+                  console.log(dist(selectedShape.startX, selectedShape.startY, startX, startY))
               }
           }
       });
@@ -206,9 +189,8 @@
       canvas.addEventListener('mousemove', e => {
           // return if we're not dragging
           if(!isDragging){
-            currentHandle = getHandle(point(e.pageX - this.offsetLeft, e.pageY - this.offsetTop));
-            return}
-          //console.log(currentHandle);
+            return;
+          }
 
           // calculate the current mouse position         
           mouseX = parseInt(e.clientX - offsetX);
@@ -243,15 +225,24 @@
               selectedShape.startX += dx;
               selectedShape.startY += dy;
               drawAll();
-              selectedShapeIndex = false;
+              //selectedShapeIndex = false;
           } else {
               drawAll();
               context.strokeRect(startX, startY, dx, dy);
               shapes.push({startX, startY, dx , dy});
           }
-
-          //console.log(shapes)
       });
+
+      document.addEventListener('keydown', ({key}) => {
+        console.log(key);
+        console.log(selectedShapeIndex);
+        console.log(selectedShape);
+        if (["Backspace", "Delete", "x"].includes(key)) {
+          shapes.splice(selectedShapeIndex, 1);
+          drawAll();
+        }
+      });
+
 
     });
   });
