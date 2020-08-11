@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link rel="icon" href="/favicon.ico">
   <meta charset="UTF-8">
   <title>Annotator</title>
  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.min.js"></script>
@@ -22,14 +23,15 @@
         <br/>
 </div>
 
-<script> 
 
+<script> 
+  // PDF
   //
   // If absolute URL from the remote server is provided, configure the CORS
   // header on that server.
   //
   var url = './dataset/testfile.pdf';
-  var pagenum = 6;
+  var pagenum = 1;
 
   //
   // The workerSrc property shall be specified.
@@ -57,10 +59,6 @@
       canvas.width = viewport.width;
       canvas.height = viewport.height;
 
-      var drawcanvas = document.getElementById("overlay");
-      drawcanvas.width = viewport.width;
-      drawcanvas.height = viewport.height;
-
       //
       // Render PDF page into canvas context
       //
@@ -71,224 +69,192 @@
       //context.fillStyle = 'rgb(255, 0, 0)';
       //context.fillRect(50, 50, 100, 150);
       page.render(renderContext);
+
+
+    // Annotator
+    // https://riptutorial.com/html5-canvas/example/18918/dragging-circles---rectangles-around-the-canvas
+      var canvas = document.getElementById('overlay');
+      var pdfcanvas = document.getElementById('pdfcanvas');
+      canvas.width = pdfcanvas.width;
+      canvas.height = pdfcanvas.height;
+      var context = canvas.getContext('2d');
+      var url = './dataset/testfile.json';
+
+      // save relevant information about shapes drawn on the canvas
+      var shapes = [];
+
+      // drag related vars
+      var isDragging=false, handlesSize=8, currentHandle=false, selectedShapeIndex=false;
+      var startX, startY;
+
+      //  dragging rectangle
+      rect = { x: 150, y: 100, w: 123, h: 58 };
+
+      // redraw overlay shape every 5ms
+      var refreshOverlay = setInterval(drawAll, 10);
+
+      // used to calc canvas position relative to window
+      function reOffset() {
+        var BB = canvas.getBoundingClientRect();
+        offsetX = BB.left;
+        offsetY = BB.top;        
+      }
+      var offsetX, offsetY;
+      reOffset();
+      window.onscroll = function(e){ reOffset(); }
+      window.onresize = function(e){ reOffset(); }
+      canvas.onresize = function(e){ reOffset(); }
+
+      // given mouse X & Y (mx & my) and shape object
+      // return true/false whether mouse is inside the shape
+      function isMouseInShape(mx, my, shape) {
+          var rLeft = shape.startX;
+          var rRight = shape.startX + shape.dx;
+          var rTop = shape.startY;
+          var rBott = shape.startY + shape.dy;
+          // math test to see if mouse is inside rectangle
+          if( mx>rLeft && mx<rRight && my>rTop && my<rBott){
+              return(true);
+          }
+        // the mouse isn't in any of the shapes
+        return(false);
+      }
+
+      // clear the canvas and 
+      // redraw all shapes in their current positions
+      function drawAll() {
+        //console.log(canvas.width, canvas.height);  
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        for(var i=0; i<shapes.length; i++) {
+            var shape = shapes[i];
+            context.strokeRect(shape.startX, shape.startY, shape.dx, shape.dy);
+            }
+      }
+
+
+
+      function dist(p1, p2) {
+          return Math.sqrt((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y));
+      }
+
+      function point(x, y) {
+          return {
+              x: x,
+              y: y
+          };
+      }
+
+      function getHandle(mouse) {
+          if (dist(mouse, point(rect.x, rect.y)) <= handlesSize) return 'topleft';
+          if (dist(mouse, point(rect.x + rect.w, rect.y)) <= handlesSize) return 'topright';
+          if (dist(mouse, point(rect.x, rect.y + rect.h)) <= handlesSize) return 'bottomleft';
+          if (dist(mouse, point(rect.x + rect.w, rect.y + rect.h)) <= handlesSize) return 'bottomright';
+          if (dist(mouse, point(rect.x + rect.w / 2, rect.y)) <= handlesSize) return 'top';
+          if (dist(mouse, point(rect.x, rect.y + rect.h / 2)) <= handlesSize) return 'left';
+          if (dist(mouse, point(rect.x + rect.w / 2, rect.y + rect.h)) <= handlesSize) return 'bottom';
+          if (dist(mouse, point(rect.x + rect.w, rect.y + rect.h / 2)) <= handlesSize) return 'right';
+          return false;
+      }
+
+      // get shapes from Google Vision generated json
+      fetch(url)
+      .then(response => response.json())
+      .then(response => { 
+          var blocks = response.responses[pagenum-1].fullTextAnnotation.pages[0].blocks;
+          for (var i=0; i < blocks.length; i++) {
+                  var coords = blocks[i].boundingBox.normalizedVertices;
+                  // convert normalizedVertices to regular coords
+                  coords = coords.map(function(element) { return [element.x * canvas.width, 
+                                                                  element.y * canvas.height] });
+                  startX = coords[0][0];
+                  startY = coords[0][1];
+                  dx = coords[2][0] - coords[0][0];
+                  dy = coords[2][1] - coords[0][1];
+                  shapes.push({startX, startY, dx , dy});
+          }
+      })
+      .catch(error => console.log("Erreur : " + error));
+
+
+
+      canvas.addEventListener('mousedown', e => {
+          clearInterval(refreshOverlay);
+          isDragging = true;
+          // calculate the current mouse position
+          startX = parseInt(e.clientX - offsetX);
+          startY = parseInt(e.clientY - offsetY);
+          // test mouse position against all shapes
+          // post result if mouse is in a shape
+          for (var i=0; i < shapes.length; i++) {
+              if(isMouseInShape(startX, startY, shapes[i])) {
+                  // the mouse is inside this shape
+                  // select this shape
+                  selectedShapeIndex = i;
+                  var selectedShape = shapes[selectedShapeIndex];
+              }
+          }
+      });
+
+      canvas.addEventListener('mouseout', e => {
+          // return if we're not dragging
+          if(!isDragging){return;}
+          // the drag is over -- clear the isDragging flag
+          isDragging = false;
+          selectedShapeIndex = false;
+      });
+
+      canvas.addEventListener('mousemove', e => {
+          // return if we're not dragging
+          if(!isDragging){
+            currentHandle = getHandle(point(e.pageX - this.offsetLeft, e.pageY - this.offsetTop));
+            return}
+          //console.log(currentHandle);
+
+          // calculate the current mouse position         
+          mouseX = parseInt(e.clientX - offsetX);
+          mouseY = parseInt(e.clientY - offsetY);
+          // how far has the mouse dragged from its previous mousemove position?
+          var dx = mouseX - startX;
+          var dy = mouseY - startY;
+          if(Number.isInteger(selectedShapeIndex)) {
+              // move the selected shape by the drag distance
+              selectedShape = shapes[selectedShapeIndex];
+          } else {
+              drawAll();
+              context.strokeRect(startX, startY, dx, dy);
+          }
+      });
+          
+      canvas.addEventListener('mouseup', e => {
+          refreshOverlay = setInterval(drawAll, 10);
+          // return if we're not dragging
+          if(!isDragging){return;}
+          // calculate the current mouse position         
+          mouseX = parseInt(e.clientX - offsetX);
+          mouseY = parseInt(e.clientY - offsetY);
+          // how far has the mouse dragged from its previous mousemove position?
+          var dx = mouseX - startX;
+          var dy = mouseY - startY;
+          // the drag is over -- clear the isDragging flag
+          isDragging = false;
+          if(Number.isInteger(selectedShapeIndex)) {
+              // move the selected shape by the drag distance
+              selectedShape = shapes[selectedShapeIndex];
+              selectedShape.startX += dx;
+              selectedShape.startY += dy;
+              drawAll();
+              selectedShapeIndex = false;
+          } else {
+              drawAll();
+              context.strokeRect(startX, startY, dx, dy);
+              shapes.push({startX, startY, dx , dy});
+          }
+
+          //console.log(shapes)
+      });
+
     });
   });
-</script>
-<!--
-<script>
-  var canvas = document.getElementById('pdfcanvas');
-  var ctx = canvas.getContext('2d');
-  var imagedata = ctx.getImageData(0, 0, canvas.width, canvas.height)
-  canvas.style.cursor = "crosshair";
-  ctx.setLineDash([6]);
-  drag = false;
-  //setInterval(function() {update()}, 10);
-
-  rect = canvas.getBoundingClientRect();
-
-  canvas.addEventListener('mousedown', e => {
-        startX = e.clientX - rect.left;
-        startY = e.clientY - rect.top;
-        drag  = true;
-    });
-
- 
- canvas.addEventListener('mousemove', e => {
-        if (drag) {
-          width = e.clientX - startX;
-          height = e.clientY - startY;
-          //ctx.strokeRect(startX, startY, width, height);
-          //ctx.putImageData(imagedata, 0, 0, 0, 0, canvas.width, canvas.height);
-          //ctx.clearRect(0,0,canvas.width,canvas.height); //clear canvas
-          ctx.beginPath();
-          //ctx.rect(startX, startY, width,height);
-          //ctx.stroke();
-           }
-    });
-
- canvas.addEventListener('mouseup', e => {
-        width = e.clientX - startX;
-        height = e.clientY - startY;
-        ctx.strokeRect(startX, startY, width , height)
-        drag = false;
-    });
-
-</script>
--->
-<script>
-// https://riptutorial.com/html5-canvas/example/18918/dragging-circles---rectangles-around-the-canvas
-
-var url = './dataset/testfile.json';
-  // canvas related vars
-var canvas = document.getElementById("overlay");
-var ctx = canvas.getContext("2d");
-
-// save relevant information about shapes drawn on the canvas
-var shapes = [];
-
-// drag related vars
-var isDragging=false, handlesSize=8, currentHandle=false, selectedShapeIndex=false, pagenum=6;
-var startX, startY;
-
-// redraw overlay shape every 5ms
-var refreshOverlay = setInterval(drawAll, 10);
-
-// used to calc canvas position relative to window
-function reOffset() {
-    var BB = canvas.getBoundingClientRect();
-    offsetX = BB.left;
-    offsetY = BB.top;        
-}
-var offsetX, offsetY;
-reOffset();
-window.onscroll = function(e){ reOffset(); }
-window.onresize = function(e){ reOffset(); }
-canvas.onresize = function(e){ reOffset(); }
-
-// given mouse X & Y (mx & my) and shape object
-// return true/false whether mouse is inside the shape
-function isMouseInShape(mx, my, shape) {
-        var rLeft = shape.startX;
-        var rRight = shape.startX + shape.dx;
-        var rTop = shape.startY;
-        var rBott = shape.startY + shape.dy;
-        // math test to see if mouse is inside rectangle
-        if( mx>rLeft && mx<rRight && my>rTop && my<rBott){
-            return(true);
-        }
-    // the mouse isn't in any of the shapes
-    return(false);
-}
-
-// clear the canvas and 
-// redraw all shapes in their current positions
-function drawAll() {
-     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for(var i=0; i<shapes.length; i++) {
-        var shape = shapes[i];
-        ctx.strokeRect(shape.startX, shape.startY, shape.dx, shape.dy);
-        }
-}
-
-
-
-function dist(p1, p2) {
-    return Math.sqrt((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y));
-}
-
-function point(x, y) {
-    return {
-        x: x,
-        y: y
-    };
-}
-
-function getHandle(mouse) {
-    if (dist(mouse, point(rect.x, rect.y)) <= handlesSize) return 'topleft';
-    if (dist(mouse, point(rect.x + rect.w, rect.y)) <= handlesSize) return 'topright';
-    if (dist(mouse, point(rect.x, rect.y + rect.h)) <= handlesSize) return 'bottomleft';
-    if (dist(mouse, point(rect.x + rect.w, rect.y + rect.h)) <= handlesSize) return 'bottomright';
-    if (dist(mouse, point(rect.x + rect.w / 2, rect.y)) <= handlesSize) return 'top';
-    if (dist(mouse, point(rect.x, rect.y + rect.h / 2)) <= handlesSize) return 'left';
-    if (dist(mouse, point(rect.x + rect.w / 2, rect.y + rect.h)) <= handlesSize) return 'bottom';
-    if (dist(mouse, point(rect.x + rect.w, rect.y + rect.h / 2)) <= handlesSize) return 'right';
-    return false;
-}
-
-// get shapes from Google Vision generated json
-fetch(url)
-.then(response => response.json())
-.then(response => { 
-        var blocks = response.responses[pagenum].fullTextAnnotation.pages[0].blocks;
-        for (var i=0; i < blocks.length; i++) {
-                var coords = blocks[i].boundingBox.normalizedVertices;
-                // convert normalizedVertices to regular coords
-                coords = coords.map(function(element) { return [element.x * canvas.width, 
-                                                                element.y * canvas.height] });
-                //console.log(coords);
-                startX = coords[0][0];
-                startY = coords[0][1];
-                dx = coords[2][0] - coords[0][0];
-                dy = coords[2][1] - coords[0][1];
-                shapes.push({startX, startY, dx , dy});
-        }
-})
-.catch(error => console.log("Erreur : " + error));
-
-
-
-canvas.addEventListener('mousedown', e => {
-    clearInterval(refreshOverlay);
-    isDragging = true;
-    // calculate the current mouse position
-    startX = parseInt(e.clientX - offsetX);
-    startY = parseInt(e.clientY - offsetY);
-    // test mouse position against all shapes
-    // post result if mouse is in a shape
-    for (var i=0; i < shapes.length; i++) {
-        if(isMouseInShape(startX, startY, shapes[i])) {
-            // the mouse is inside this shape
-            // select this shape
-            selectedShapeIndex = i;
-            var selectedShape = shapes[selectedShapeIndex];
-        }
-    }
-});
-
-canvas.addEventListener('mouseout', e => {
-    // return if we're not dragging
-    if(!isDragging){return;}
-    // the drag is over -- clear the isDragging flag
-    isDragging = false;
-    selectedShapeIndex = false;
-});
-
-canvas.addEventListener('mousemove', e => {
-    // return if we're not dragging
-    if(!isDragging){return;}
-    // calculate the current mouse position         
-    mouseX = parseInt(e.clientX - offsetX);
-    mouseY = parseInt(e.clientY - offsetY);
-    // how far has the mouse dragged from its previous mousemove position?
-    var dx = mouseX - startX;
-    var dy = mouseY - startY;
-    if(Number.isInteger(selectedShapeIndex)) {
-        // move the selected shape by the drag distance
-        selectedShape = shapes[selectedShapeIndex];
-    } else {
-        drawAll();
-        ctx.strokeRect(startX, startY, dx, dy);
-    }
-});
-    
-canvas.addEventListener('mouseup', e => {
-    refreshOverlay = setInterval(drawAll, 10);
-    // return if we're not dragging
-    if(!isDragging){return;}
-    // calculate the current mouse position         
-    mouseX = parseInt(e.clientX - offsetX);
-    mouseY = parseInt(e.clientY - offsetY);
-    // how far has the mouse dragged from its previous mousemove position?
-    var dx = mouseX - startX;
-    var dy = mouseY - startY;
-    // the drag is over -- clear the isDragging flag
-    isDragging = false;
-    if(Number.isInteger(selectedShapeIndex)) {
-        // move the selected shape by the drag distance
-        selectedShape = shapes[selectedShapeIndex];
-        selectedShape.startX += dx;
-        selectedShape.startY += dy;
-        drawAll();
-        selectedShapeIndex = false;
-    } else {
-        drawAll();
-        ctx.strokeRect(startX, startY, dx, dy);
-        shapes.push({startX, startY, dx , dy});
-    }
-
-    console.log(shapes)
-});
-
 
 
 </script>
