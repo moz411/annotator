@@ -8,26 +8,48 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/3.4.0/fabric.min.js"></script>
   <style>
-        #container { position: relative; }
-        #container canvas, #overlay { position: absolute; }
-        canvas { border: 1px solid black; }
+        #container { position: relative }
+        #container canvas, #overlay { position: absolute}
+        canvas { border: 1px solid black }
+        .flex-container { display: flex; flex-direction: row;  align-content: space-between;}
   </style>
 </head>
 <body>
-<div>
-  <button id="prev">Previous</button>
-  <button id="next">Next</button>
-  &nbsp; &nbsp;
-  <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
-</div>
-<div id="container">
-  <canvas id="pdfcanvas"></canvas>
-  <canvas id="overlay"></canvas>
-</div>
+  <div class="flex-container">
 
-<div>
-        <br/>
-</div>
+    <div style="flex: 0 0 200px">
+      <br/>
+      <ul>
+        <li data-id="01" style="background-color: #f68f46ff">Titre</li>
+        <li data-id="2" style="background-color: #0c2a50ff">Sous-titre</li>
+        <li data-id="3" style="background-color: #13306dff">Paragraphe</li>
+        <li data-id="4" style="background-color: #253582ff">Auteur</li>
+        <li data-id="5" style="background-color: #403891ff">Citation</li>
+        <li data-id="6" style="background-color: #593d9cff">Image</li>
+        <li data-id="7" style="background-color: #6b4596ff">Légende</li>
+        <li data-id="8" style="background-color: #7e4e90ff">Encadré</li>
+        <li data-id="9" style="background-color: #90548bff">Tableau</li>
+        <li data-id="10" style="background-color: #a65c85ff">Copyright</li>
+        <li data-id="11" style="background-color: #b8627dff">Chapô</li>
+        <li data-id="12" style="background-color: #cc6a70ff">Ours</li>
+        <li data-id="13" style="background-color: #de7065ff">Pied de page</li>
+        <li data-id="14" style="background-color: #eb8055ff">Numéro de page</li>
+      </ul>
+    </div>
+
+    <div>
+      <div>
+        <button id="prev">Previous</button>
+        <button id="next">Next</button>
+        <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+      </div>
+      <div id="container">
+        <canvas id="pdfcanvas"></canvas>
+        <canvas id="overlay"></canvas>
+      </div>
+    </div>
+    
+  </div>
 
 
 <script> 
