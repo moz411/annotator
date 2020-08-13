@@ -12,10 +12,14 @@
         #container canvas, #overlay { position: absolute; }
         canvas { border: 1px solid black; }
   </style>
-
 </head>
 <body>
-
+<div>
+  <button id="prev">Previous</button>
+  <button id="next">Next</button>
+  &nbsp; &nbsp;
+  <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+</div>
 <div id="container">
   <canvas id="pdfcanvas"></canvas>
   <canvas id="overlay"></canvas>
@@ -33,7 +37,6 @@
   // header on that server.
   //
   var url = './dataset/testfile.pdf';
-  var pagenum = 6;
 
   //
   // The workerSrc property shall be specified.
@@ -41,181 +44,235 @@
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
 
-  //
-  // Asynchronous download PDF
-  //
-  var loadingTask = pdfjsLib.getDocument(url);
-  loadingTask.promise.then(function(pdf) {
-    //
-    // Fetch the first page
-    //
-    pdf.getPage(pagenum).then(function(page) {
-      var scale = .9;
-      var viewport = page.getViewport({ scale: scale, });
+  var pdfDoc = null,
+      pageNum = 1,
+      pageRendering = false,
+      pageNumPending = null,
+      scale = 1,
+      canvas = document.getElementById('pdfcanvas'),
+      ctx = canvas.getContext('2d'),
+      overlay = document.getElementById('overlay'),
+      overlayctx = overlay.getContext('2d'),
+      shapes = [],
+      isDragging=false,
+      selectedShapeIndex=false,
+      x, y, dx, dy, newX, newY, offsetX, offsetY;
 
-      //
-      // Prepare canvas using PDF page dimensions
-      //
-      var canvas = document.getElementById('pdfcanvas');
-      var context = canvas.getContext('2d');
-      canvas.width = viewport.width;
+  /**
+   * Get page info from document, resize canvas accordingly, and render page.
+   * @param num Page number.
+   */
+  function renderPage(num) {
+    pageRendering = true;
+    // Using promise to fetch the page
+    pdfDoc.getPage(num).then(function(page) {
+      var viewport = page.getViewport({scale: scale});
       canvas.height = viewport.height;
+      canvas.width = viewport.width;
 
-      //
       // Render PDF page into canvas context
-      //
       var renderContext = {
-        canvasContext: context,
-        viewport: viewport,
+        canvasContext: ctx,
+        viewport: viewport
       };
-      //context.fillStyle = 'rgb(255, 0, 0)';
-      //context.fillRect(50, 50, 100, 150);
-      page.render(renderContext);
+      var renderTask = page.render(renderContext);
 
+      // Wait for rendering to finish
+      renderTask.promise.then(function() {
+        pageRendering = false;
+        if (pageNumPending !== null) {
+          // New page rendering is pending
+          renderPage(pageNumPending);
+          pageNumPending = null;
+        }
+      loadJson('./dataset/testfile.json');
+      annotate(pageNum);
+      });
+    });
 
+    // Update page counters
+    document.getElementById('page_num').textContent = num;
+  }
+
+  /**
+   * If another page rendering in progress, waits until the rendering is
+   * finised. Otherwise, executes rendering immediately.
+   */
+  function queueRenderPage(num) {
+    if (pageRendering) {
+      pageNumPending = num;
+    } else {
+      renderPage(num);
+    }
+  }
+
+  /**
+   * Displays previous page.
+   */
+  function onPrevPage() {
+    if (pageNum <= 1) {
+      return;
+    }
+    pageNum--;
+    selectedShapeIndex=false;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById('prev').addEventListener('click', onPrevPage);
+
+  /**
+   * Displays next page.
+   */
+  function onNextPage() {
+    if (pageNum >= pdfDoc.numPages) {
+      return;
+    }
+    pageNum++;
+    selectedShapeIndex=false;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById('next').addEventListener('click', onNextPage);
+
+  function loadJson(url) {
+    // get shapes from Google Vision generated json
+    fetch(url)
+    .then(response => response.json())
+    .then(response => { 
+        for (var i=0; i<response.responses.length; i++) {
+          shapes[i] = [];
+          var blocks = response.responses[i].fullTextAnnotation.pages[0].blocks;
+          var marge = 5;
+          for (var j=0; j < blocks.length; j++) {
+                var coords = blocks[j].boundingBox.normalizedVertices;
+                // convert normalizedVertices to regular coords
+                coords = coords.map(function(element) { return [element.x * overlay.width, 
+                                                                element.y * overlay.height] });
+                x = coords[0][0] - marge;
+                y = coords[0][1] - marge;
+                dx = coords[2][0] - coords[0][0] + marge*2;
+                dy = coords[2][1] - coords[0][1] + marge*2;
+                shapes[i].push({x, y, dx , dy});
+          }
+        }
+    });
+  }
+
+  function annotate(num) {
     // Annotator
     // https://riptutorial.com/html5-canvas/example/18918/dragging-circles---rectangles-around-the-canvas
-      var canvas = document.getElementById('overlay');
-      var pdfcanvas = document.getElementById('pdfcanvas');
-      canvas.width = pdfcanvas.width;
-      canvas.height = pdfcanvas.height;
-      var context = canvas.getContext('2d');
-      var url = './dataset/testfile.json';
 
-      // save relevant information about shapes drawn on the canvas
-      var shapes = [], isDragging=false, selectedShapeIndex=false, x, y, dx, dy, newX, newY;
+    refreshOverlay = setInterval(drawAll, 500);
+    overlay.width = canvas.width;
+    overlay.height = canvas.height;
+    // used to calc canvas position relative to window
+    function reOffset() {
+      var BB = overlay.getBoundingClientRect();
+      offsetX = BB.left;
+      offsetY = BB.top;        
+    };
+    reOffset();
+    window.onscroll = function(e){ reOffset(); }
+    window.onresize = function(e){ reOffset(); }
+    canvas.onresize = function(e){ reOffset(); }
 
-      // redraw overlay shape every 5ms
-      var refreshOverlay = setInterval(drawAll, 500);
-
-      // used to calc canvas position relative to window
-      var offsetX, offsetY;
-      function reOffset() {
-        var BB = canvas.getBoundingClientRect();
-        offsetX = BB.left;
-        offsetY = BB.top;        
-      };
-      reOffset();
-      window.onscroll = function(e){ reOffset(); }
-      window.onresize = function(e){ reOffset(); }
-      canvas.onresize = function(e){ reOffset(); }
-
-      // clear the canvas and 
-      // redraw all shapes in their current positions every 10ms
-      function drawAll() {
-        //console.log(canvas.width, canvas.height);  
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        for (var i=0; i<shapes.length; i++) {
-          shape = shapes[i];
-          context.lineWidth = 1
-          if(i == selectedShapeIndex) { context.lineWidth = 2 }
-          context.strokeRect(shape.x, shape.y, shape.dx, shape.dy)
-          }
-      };
-
-      // distance from a corner
-      function dist(x1,y1,x2,y2) { 
-        if(!x2) x2=0; 
-        if(!y2) y2=0;
-        return Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)); 
-      };
-
-      // get shapes from Google Vision generated json
-
-      fetch(url)
-      .then(response => response.json())
-      .then(response => { 
-          var blocks = response.responses[pagenum-1].fullTextAnnotation.pages[0].blocks;
-          var marge = 5;
-          for (var i=0; i < blocks.length; i++) {
-                  var coords = blocks[i].boundingBox.normalizedVertices;
-                  // convert normalizedVertices to regular coords
-                  coords = coords.map(function(element) { return [element.x * canvas.width, 
-                                                                  element.y * canvas.height] });
-                  x = coords[0][0] - marge;
-                  y = coords[0][1] - marge;
-                  dx = coords[2][0] - coords[0][0] + marge*2;
-                  dy = coords[2][1] - coords[0][1] + marge*2;
-                  shapes.push({x, y, dx , dy});
-          }
-      })
-      .catch(error => console.log("Erreur : " + error));
-
-      canvas.addEventListener('mousedown', e => {
-        selectedShapeIndex = false;
-        clearInterval(refreshOverlay);
-        isDragging = true;
-        // calculate the current mouse position
-        x = parseInt(e.clientX - offsetX);
-        y = parseInt(e.clientY - offsetY);
-        
-        // if mouse is in a shape, select it
-
-        for (var i=0; i<shapes.length; i++) {
-          shape = shapes[i]
-          if(x>shape.x && x<shape.x+shape.dx && y>shape.y && y<shape.y+shape.dy) {
-            selectedShapeIndex = i
-            console.log(selectedShapeIndex)
-          }
+    // clear the canvas and 
+    // redraw all shapes in their current positions every 10ms
+    function drawAll() {
+      //console.log(canvas.width, canvas.height);  
+      overlayctx.clearRect(0, 0, overlay.width, overlay.height)
+      for (var i=0; i<shapes[pageNum-1].length; i++) {
+        shape = shapes[pageNum-1][i]
+        overlayctx.lineWidth = 1
+        if(i == selectedShapeIndex) { overlayctx.lineWidth = 2 }
+        overlayctx.strokeRect(shape.x, shape.y, shape.dx, shape.dy)
         }
-      });
+    };
 
-      canvas.addEventListener('mousemove', e => {
-        // return if we're not dragging
-        if(!isDragging){return};
-        newX = parseInt(e.clientX - offsetX);
-        newY = parseInt(e.clientY - offsetY);
-        dx = newX - x;
-        dy = newY - y;
-        if(!Number.isInteger(selectedShapeIndex)) {
-          drawAll()
-          context.strokeRect(x, y, dx, dy)
+    overlay.addEventListener('mousedown', e => {
+      selectedShapeIndex = false
+      clearInterval(refreshOverlay)
+      isDragging = true
+      // calculate the current mouse position
+      x = parseInt(e.clientX - offsetX)
+      y = parseInt(e.clientY - offsetY)
+      
+      // if mouse is in a shape, select it
+      for (var i=0; i<shapes[pageNum-1].length; i++) {
+        shape = shapes[pageNum-1][i]
+        if(x>shape.x && x<shape.x+shape.dx && y>shape.y && y<shape.y+shape.dy) {
+          selectedShapeIndex = i
+          //console.log(selectedShapeIndex)
         }
-        
-      });
-          
-      canvas.addEventListener('mouseup', e => {
-        // the drag is over -- clear the isDragging flag
-        isDragging = false;
-        refreshOverlay = setInterval(drawAll, 100);
-        // how far has the mouse dragged from its previous mousemove position?
-        newX = parseInt(e.clientX - offsetX);
-        newY = parseInt(e.clientY - offsetY);
-        dx = newX - x;
-        dy = newY - y;
-        if (dx == 0 || dy == 0) {return}
-
-        if(Number.isInteger(selectedShapeIndex)) {
-          shape = shapes[selectedShapeIndex]
-          shape.x += dx
-          shape.y += dy
-          }
-        else 
-        {
-          shapes.push({x, y, dx, dy})
-          selectedShapeIndex = shapes.length
-        }
-      });
-
-      canvas.addEventListener('mouseout', e => {
-        // return if we're not dragging
-        if(!isDragging){return;}
-        // the drag is over -- clear the isDragging flag
-        isDragging = false;
-        //selectedShapeIndex = false;
-      });
-
-      document.addEventListener('keydown', ({key}) => {
-        console.log(shapes);
-        if (["Backspace", "Delete", "x"].includes(key)) {
-          shapes.splice(selectedShapeIndex, 1);
-          drawAll();
-        }
-      });
-
-
+      }
     });
+
+    overlay.addEventListener('mousemove', e => {
+      // return if we're not dragging
+      //console.log(isDragging)
+      //console.log(selectedShapeIndex)
+      if(!isDragging){return}
+      newX = parseInt(e.clientX - offsetX)
+      newY = parseInt(e.clientY - offsetY)
+      dx = newX - x
+      dy = newY - y
+      if(!Number.isInteger(selectedShapeIndex)) {
+        // draw a new rectangle
+        drawAll()
+        overlayctx.strokeRect(x, y, dx, dy)
+      }
+      
+    });
+        
+    overlay.addEventListener('mouseup', e => {
+      // the drag is over -- clear the isDragging flag
+      isDragging = false
+      refreshOverlay = setInterval(drawAll, 100)
+      // how far has the mouse dragged from its previous mousemove position?
+      newX = parseInt(e.clientX - offsetX)
+      newY = parseInt(e.clientY - offsetY)
+      dx = newX - x
+      dy = newY - y
+      if (dx == 0 || dy == 0) {return}
+
+      if(Number.isInteger(selectedShapeIndex)) {
+        shape = shapes[pageNum-1][selectedShapeIndex]
+        shape.x += dx
+        shape.y += dy
+        }
+      else 
+      {
+        shapes[pageNum-1].push({x, y, dx, dy})
+        selectedShapeIndex = shapes[pageNum-1].length
+      }
+    });
+
+    overlay.addEventListener('mouseout', e => {
+      // return if we're not dragging
+      if(!isDragging){return}
+      // the drag is over -- clear the isDragging flag
+      isDragging = false
+      //selectedShapeIndex = false;
+    });
+
+    document.addEventListener('keydown', e => {
+      e.preventDefault();
+      if (["Backspace", "Delete", "x"].includes(e.key)) {
+        shapes[pageNum-1].splice(selectedShapeIndex, 1);
+        drawAll();
+      }
+    });
+  }
+
+
+  /**
+   * Asynchronously downloads PDF.
+   */
+  pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+    pdfDoc = pdfDoc_
+    document.getElementById('page_count').textContent = pdfDoc.numPages
+    // Initial/first page rendering
+    renderPage(pageNum)
   });
+
 
 
 </script>
