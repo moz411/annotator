@@ -12,32 +12,36 @@
         #container canvas, #overlay { position: absolute}
         canvas { border: 1px solid black }
         .flex-container { display: flex; flex-direction: row;  align-content: space-between;}
+        .sidebar {flex: 1; height:100vh; position:absolute; top:0px; left: 5px;}
+        .content {flex: 1; height:100vh; position:absolute; top:0px; left: 15%;}
+        ul, li { padding: 10px 15px 18px 15px;  list-style-type: none;}
   </style>
 </head>
 <body>
   <div class="flex-container">
 
-    <div style="flex: 0 0 200px">
+    <div class="sidebar">
       <br/>
       <ul>
-        <li data-id="01" style="background-color: #f68f46ff">Titre</li>
-        <li data-id="2" style="background-color: #0c2a50ff">Sous-titre</li>
-        <li data-id="3" style="background-color: #13306dff">Paragraphe</li>
-        <li data-id="4" style="background-color: #253582ff">Auteur</li>
-        <li data-id="5" style="background-color: #403891ff">Citation</li>
-        <li data-id="6" style="background-color: #593d9cff">Image</li>
-        <li data-id="7" style="background-color: #6b4596ff">Légende</li>
-        <li data-id="8" style="background-color: #7e4e90ff">Encadré</li>
-        <li data-id="9" style="background-color: #90548bff">Tableau</li>
-        <li data-id="10" style="background-color: #a65c85ff">Copyright</li>
-        <li data-id="11" style="background-color: #b8627dff">Chapô</li>
-        <li data-id="12" style="background-color: #cc6a70ff">Ours</li>
-        <li data-id="13" style="background-color: #de7065ff">Pied de page</li>
-        <li data-id="14" style="background-color: #eb8055ff">Numéro de page</li>
+        <li class="annotator" style="background-color: #2678B2">Titre</li>
+        <li class="annotator" style="background-color: #AFC8E7">Sous-titre</li>
+        <li class="annotator" style="background-color: #FD7F28">Paragraphe</li>
+        <li class="annotator" style="background-color: #FDBA7D">Auteur</li>
+        <li class="annotator" style="background-color: #339F34">Citation</li>
+        <li class="annotator" style="background-color: #FDEA7E">Référence</li>
+        <li class="annotator" style="background-color: #9ADE8D">Image</li>
+        <li class="annotator" style="background-color: #D83F44">Légende</li>
+        <li class="annotator" style="background-color: #FD9998">Encadré</li>
+        <li class="annotator" style="background-color: #936ABB">Tableau</li>
+        <li class="annotator" style="background-color: #C5B1D4">Copyright</li>
+        <li class="annotator" style="background-color: #E17AC1">Pied de page</li>
+        <li class="annotator" style="background-color: #BCBC35">Numéro de page</li>
       </ul>
     </div>
 
-    <div>
+    <div> &nbsp;  &nbsp;</div>
+
+    <div class="content">
       <div>
         <button id="prev">Previous</button>
         <button id="next">Next</button>
@@ -54,19 +58,12 @@
 
 <script> 
   // PDF
-  //
-  // If absolute URL from the remote server is provided, configure the CORS
-  // header on that server.
-  //
-  var url = './dataset/testfile.pdf';
-
-  //
-  // The workerSrc property shall be specified.
-  //
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
 
-  var pdfDoc = null,
+  var url = './dataset/MachineLearningForDummies_extract.pdf',
+      jsonfile = './dataset/MachineLearningForDummies_extract.json',
+      pdfDoc = null,
       pageNum = 1,
       pageRendering = false,
       pageNumPending = null,
@@ -78,6 +75,8 @@
       shapes = [],
       isDragging=false,
       selectedShapeIndex=false,
+      jsonloaded=false,
+      color='black',
       x, y, dx, dy, newX, newY, offsetX, offsetY;
 
   /**
@@ -107,8 +106,11 @@
           renderPage(pageNumPending);
           pageNumPending = null;
         }
-      loadJson('./dataset/testfile.json');
       annotate(pageNum);
+      if (!jsonloaded) {
+        loadJson(jsonfile);
+      }
+      
       });
     });
 
@@ -172,12 +174,15 @@
                 y = coords[0][1] - marge;
                 dx = coords[2][0] - coords[0][0] + marge*2;
                 dy = coords[2][1] - coords[0][1] + marge*2;
-                shapes[i].push({x, y, dx , dy});
+                shapes[i].push({x, y, dx , dy, color});
           }
         }
     });
+    jsonloaded=true;
   }
 
+
+  
   function annotate(num) {
     // Annotator
     // https://riptutorial.com/html5-canvas/example/18918/dragging-circles---rectangles-around-the-canvas
@@ -199,18 +204,21 @@
     // clear the canvas and 
     // redraw all shapes in their current positions every 10ms
     function drawAll() {
-      //console.log(canvas.width, canvas.height);  
       overlayctx.clearRect(0, 0, overlay.width, overlay.height)
       for (var i=0; i<shapes[pageNum-1].length; i++) {
-        shape = shapes[pageNum-1][i]
-        overlayctx.lineWidth = 1
-        if(i == selectedShapeIndex) { overlayctx.lineWidth = 2 }
+        shape = shapes[pageNum-1][i];
+        overlayctx.lineWidth = 1;
+        overlayctx.strokeStyle = shape.color;
+        if(i == selectedShapeIndex) { 
+          overlayctx.lineWidth = 2;
+         }
         overlayctx.strokeRect(shape.x, shape.y, shape.dx, shape.dy)
         }
     };
 
     overlay.addEventListener('mousedown', e => {
       selectedShapeIndex = false
+      overlayctx.strokeStyle = 'black';
       clearInterval(refreshOverlay)
       isDragging = true
       // calculate the current mouse position
@@ -222,15 +230,12 @@
         shape = shapes[pageNum-1][i]
         if(x>shape.x && x<shape.x+shape.dx && y>shape.y && y<shape.y+shape.dy) {
           selectedShapeIndex = i
-          //console.log(selectedShapeIndex)
         }
       }
     });
 
     overlay.addEventListener('mousemove', e => {
       // return if we're not dragging
-      //console.log(isDragging)
-      //console.log(selectedShapeIndex)
       if(!isDragging){return}
       newX = parseInt(e.clientX - offsetX)
       newY = parseInt(e.clientY - offsetY)
@@ -240,7 +245,7 @@
         // draw a new rectangle
         drawAll()
         overlayctx.strokeRect(x, y, dx, dy)
-      }
+      } 
       
     });
         
@@ -256,14 +261,32 @@
       if (dx == 0 || dy == 0) {return}
 
       if(Number.isInteger(selectedShapeIndex)) {
+        // move rectangle
         shape = shapes[pageNum-1][selectedShapeIndex]
-        shape.x += dx
-        shape.y += dy
+        shape.x = newX
+        shape.y = newY
         }
       else 
       {
-        shapes[pageNum-1].push({x, y, dx, dy})
-        selectedShapeIndex = shapes[pageNum-1].length
+        // draw new rectangle
+        length = shapes[pageNum-1].push({x, y, dx, dy})
+        selectedShapeIndex = shapes[pageNum-1].length-1
+        shape = shapes[pageNum-1][selectedShapeIndex]
+
+        /*
+        // remove all rectangles inside selections
+        var toremove = [];
+        for (var i=0; i<shapes[pageNum-1].length; i++) {
+          inShape = shapes[pageNum-1][i]
+          if(inShape.x>shape.x && inShape.x+inShape.dx<shape.x+shape.dx && 
+             inShape.y>shape.y && inShape.y+inShape.dy<shape.y+shape.dy) {
+            toremove.splice(1, 0, i)
+          }
+        }
+        console.log(toremove)
+        for (i in toremove) {
+          shapes[pageNum-1].splice(i, 1);
+        }*/
       }
     });
 
@@ -272,16 +295,40 @@
       if(!isDragging){return}
       // the drag is over -- clear the isDragging flag
       isDragging = false
-      //selectedShapeIndex = false;
     });
 
     document.addEventListener('keydown', e => {
       e.preventDefault();
       if (["Backspace", "Delete", "x"].includes(e.key)) {
         shapes[pageNum-1].splice(selectedShapeIndex, 1);
-        drawAll();
       }
     });
+  }
+
+  function changeColor(e) {
+        // change color of selected shape
+        shape = shapes[pageNum-1][selectedShapeIndex];
+        shape.color = e.target.style['background-color']
+
+        // if we have shape of the exact same size and position
+        // in other pages, change their color too
+        var limit = 10;
+        for (var i=pageNum-1; i<shapes.length; i++) {
+          for (var j=0; j<shapes[i].length; j++) {
+            nextshape = shapes[i][j];
+            if (Math.abs(nextshape.x - shape.x) < limit && 
+                Math.abs(nextshape.y - shape.y) < limit &&
+                Math.abs(nextshape.dx - shape.dx) < limit && 
+                Math.abs(nextshape.dy - shape.dy) < limit) {
+              nextshape.color = shape.color;
+            }
+          }
+        }
+  }
+
+  var items = document.getElementsByClassName("annotator");
+    for (var i = 0; i < items.length; i++) {
+    items[i].addEventListener("click", changeColor);
   }
 
 
@@ -292,9 +339,8 @@
     pdfDoc = pdfDoc_
     document.getElementById('page_count').textContent = pdfDoc.numPages
     // Initial/first page rendering
-    renderPage(pageNum)
+    renderPage(pageNum);
   });
-
 
 
 </script>
