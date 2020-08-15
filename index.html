@@ -77,7 +77,8 @@
       selectedShapeIndex=false,
       jsonloaded=false,
       color='black',
-      x, y, dx, dy, newX, newY, offsetX, offsetY;
+      x, y, dx, dy, newX, newY, 
+      offsetX, offsetY, cornerX, cornerY;
 
   /**
    * Get page info from document, resize canvas accordingly, and render page.
@@ -212,7 +213,7 @@
         if(i == selectedShapeIndex) { 
           overlayctx.lineWidth = 2;
          }
-        overlayctx.strokeRect(shape.x, shape.y, shape.dx, shape.dy)
+        overlayctx.strokeRect(shape.x, shape.y, shape.dx, shape.dy);
         }
     };
 
@@ -222,14 +223,13 @@
       clearInterval(refreshOverlay)
       isDragging = true
       // calculate the current mouse position
-      x = parseInt(e.clientX - offsetX)
-      y = parseInt(e.clientY - offsetY)
-      
+      x = parseInt(e.clientX - offsetX);
+      y = parseInt(e.clientY - offsetY);
       // if mouse is in a shape, select it
       for (var i=0; i<shapes[pageNum-1].length; i++) {
         shape = shapes[pageNum-1][i]
         if(x>shape.x && x<shape.x+shape.dx && y>shape.y && y<shape.y+shape.dy) {
-          selectedShapeIndex = i
+          selectedShapeIndex = i;
         }
       }
     });
@@ -237,15 +237,21 @@
     overlay.addEventListener('mousemove', e => {
       // return if we're not dragging
       if(!isDragging){return}
-      newX = parseInt(e.clientX - offsetX)
-      newY = parseInt(e.clientY - offsetY)
-      dx = newX - x
-      dy = newY - y
-      if(!Number.isInteger(selectedShapeIndex)) {
-        // draw a new rectangle
-        drawAll()
-        overlayctx.strokeRect(x, y, dx, dy)
-      } 
+      newX = parseInt(e.clientX - offsetX);
+      newY = parseInt(e.clientY - offsetY);
+      if(Number.isInteger(selectedShapeIndex)) {
+        // redraw selected rectangle
+        drawAll();
+        shape = shapes[pageNum-1][selectedShapeIndex];
+        shape.x = newX;
+        shape.y = newY;
+
+        
+      } else {
+          // draw a new rectangle
+          drawAll();
+          overlayctx.strokeRect(x, y, newX - x, newY - y);
+      }
       
     });
         
@@ -254,25 +260,24 @@
       isDragging = false
       refreshOverlay = setInterval(drawAll, 100)
       // how far has the mouse dragged from its previous mousemove position?
-      newX = parseInt(e.clientX - offsetX)
-      newY = parseInt(e.clientY - offsetY)
-      dx = newX - x
-      dy = newY - y
-      if (dx == 0 || dy == 0) {return}
+      newX = parseInt(e.clientX - offsetX);
+      newY = parseInt(e.clientY - offsetY);
+      dx = newX - x;
+      dy = newY - y;
+      if (dx == 0 || dy == 0) {return};
 
       if(Number.isInteger(selectedShapeIndex)) {
         // move rectangle
-        shape = shapes[pageNum-1][selectedShapeIndex]
-        shape.x = newX
-        shape.y = newY
+        shape = shapes[pageNum-1][selectedShapeIndex];
+        shape.x = newX;
+        shape.y = newY;
         }
       else 
       {
         // draw new rectangle
-        length = shapes[pageNum-1].push({x, y, dx, dy})
-        selectedShapeIndex = shapes[pageNum-1].length-1
-        shape = shapes[pageNum-1][selectedShapeIndex]
-
+        length = shapes[pageNum-1].push({x, y, dx, dy});
+        selectedShapeIndex = shapes[pageNum-1].length-1;
+        shape = shapes[pageNum-1][selectedShapeIndex];
         /*
         // remove all rectangles inside selections
         var toremove = [];
