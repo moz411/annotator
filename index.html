@@ -253,7 +253,7 @@
         shape.y1 = y2;
 
       } else {
-          // draw a new rectangle
+          // draw a rectangle
           drawAll();
           overlayctx.strokeRect(x1, y1, dx, dy);
       }
@@ -261,6 +261,8 @@
     });
         
     overlay.addEventListener('mouseup', e => {
+      // avoid double event
+      if(!isDragging){return}
       // the drag is over -- clear the isDragging flag
       isDragging = false
       refreshOverlay = setInterval(drawAll, 100)
@@ -279,10 +281,10 @@
         }
       else 
       {
-        // draw new rectangle
+        // add new shape
         shapes[pageNum-1].push({x1, y1, x2, y2, dx, dy, color});
-        selectedShapeIndex = shapes[pageNum-1].length-1;
-        shape = shapes[pageNum-1][selectedShapeIndex];
+        //selectedShapeIndex = shapes[pageNum-1].length-1;
+        //shape = shapes[pageNum-1][selectedShapeIndex];
         /*
         // remove all rectangles inside selections
         var toremove = [];
@@ -298,6 +300,7 @@
           shapes[pageNum-1].splice(i, 1);
         }*/
       }
+      console.log(shapes[pageNum-1])
     });
 
     overlay.addEventListener('mouseout', e => {
