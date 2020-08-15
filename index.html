@@ -171,13 +171,11 @@
                 // convert normalizedVertices to regular coords
                 coords = coords.map(function(element) { return [element.x * overlay.width, 
                                                                 element.y * overlay.height] });
-                x1 = coords[0][0] - marge;
-                y1 = coords[0][1] - marge;
-                x2 = coords[2][0] + marge*2;
-                y2 = coords[2][1] + marge*2;
-                dx = x2 - x1;
-                dy = y2 - y1;
-                shapes[i].push({x1, y1, x2 , y2, dx, dy, color});
+                x = coords[0][0] - marge;
+                y = coords[0][1] - marge;
+                dx = coords[2][0] + marge*2 - x;
+                dy = coords[2][1] + marge*2 - y;
+                shapes[i].push({x, y, dx, dy, color});
           }
         }
     });
@@ -216,7 +214,7 @@
           overlayctx.lineWidth = 2;
          }
          // convert coords to relative distance
-         overlayctx.strokeRect(shape.x1, shape.y1, shape.dx, shape.dy);
+         overlayctx.strokeRect(shape.x, shape.y, shape.dx, shape.dy);
         }
     };
 
@@ -226,13 +224,13 @@
       clearInterval(refreshOverlay)
       isDragging = true
       // calculate the current mouse position
-      x1 = parseInt(e.clientX - offsetX);
-      y1 = parseInt(e.clientY - offsetY);
+      x = parseInt(e.clientX - offsetX);
+      y = parseInt(e.clientY - offsetY);
       // if mouse is in a shape, select it
       for (var i=0; i<shapes[pageNum-1].length; i++) {
         shape = shapes[pageNum-1][i]
-        if(x1>shape.x1 && x1<shape.x2 && 
-           y1>shape.y1 && y1<shape.y2) {
+        if(x>shape.x && x<shape.x+shape.dx && 
+           y>shape.y && y<shape.y+shape.dy) {
           selectedShapeIndex = i;
         }
       }
@@ -243,19 +241,18 @@
       if(!isDragging){return}
       x2 = parseInt(e.clientX - offsetX);
       y2 = parseInt(e.clientY - offsetY);
-      dx = x2 - x1;
-      dy = y2 - y1;
+      dx = x2 - x;
+      dy = y2 - y;
       if(Number.isInteger(selectedShapeIndex)) {
         // redraw selected rectangle
         drawAll();
         shape = shapes[pageNum-1][selectedShapeIndex];
-        shape.x1 = x2;
-        shape.y1 = y2;
-
+        shape.x = x2;
+        shape.y = y2;
       } else {
           // draw a rectangle
           drawAll();
-          overlayctx.strokeRect(x1, y1, dx, dy);
+          overlayctx.strokeRect(x, y, dx, dy);
       }
       
     });
@@ -269,20 +266,20 @@
       // how far has the mouse dragged from its previous mousemove position?
       x2 = parseInt(e.clientX - offsetX);
       y2 = parseInt(e.clientY - offsetY);
-      dx = x2 - x1;
-      dy = y2 - y1;
+      dx = x2 - x;
+      dy = y2 - y;
       if (dx == 0 || dy == 0) {return};
 
       if(Number.isInteger(selectedShapeIndex)) {
         // move rectangle
         shape = shapes[pageNum-1][selectedShapeIndex];
-        shape.x1 = x2;
-        shape.y1 = y2;
+        shape.x = x2;
+        shape.y = y2;
         }
       else 
       {
         // add new shape
-        shapes[pageNum-1].push({x1, y1, x2, y2, dx, dy, color});
+        shapes[pageNum-1].push({x, y, dx, dy, color});
         //selectedShapeIndex = shapes[pageNum-1].length-1;
         //shape = shapes[pageNum-1][selectedShapeIndex];
         /*
@@ -300,7 +297,6 @@
           shapes[pageNum-1].splice(i, 1);
         }*/
       }
-      console.log(shapes[pageNum-1])
     });
 
     overlay.addEventListener('mouseout', e => {
@@ -310,10 +306,13 @@
       isDragging = false
     });
 
+    // delete shape
     document.addEventListener('keydown', e => {
       e.preventDefault();
+      if(!selectedShapeIndex){return}
       if (["Backspace", "Delete", "x"].includes(e.key)) {
         shapes[pageNum-1].splice(selectedShapeIndex, 1);
+        selectedShapeIndex = false;
       }
     });
   }
@@ -329,10 +328,10 @@
         for (var i=pageNum-1; i<shapes.length; i++) {
           for (var j=0; j<shapes[i].length; j++) {
             nextshape = shapes[i][j];
-            if (Math.abs(nextshape.x1 - shape.x1) < limit && 
-                Math.abs(nextshape.y1 - shape.y1) < limit &&
-                Math.abs(nextshape.x2 - shape.x2) < limit && 
-                Math.abs(nextshape.y2 - shape.y2) < limit) {
+            if (Math.abs(nextshape.x - shape.x) < limit && 
+                Math.abs(nextshape.y - shape.y) < limit &&
+                Math.abs(nextshape.dx - shape.dx) < limit && 
+                Math.abs(nextshape.dy - shape.dy) < limit) {
               nextshape.color = shape.color;
             }
           }
