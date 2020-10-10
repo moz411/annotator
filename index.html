@@ -209,7 +209,7 @@
 
     function onExport() {
       var text = JSON.stringify(shapes);
-      var filename = "annotator.js";
+      var filename = "annotator.json";
       download(filename, text);
     }
     document.getElementById('export').addEventListener('click', onExport);
