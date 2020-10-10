@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <link rel="icon" href="/favicon.ico">
   <meta charset="UTF-8">
@@ -11,150 +12,106 @@
 
 
   <style>
-        body {font-family: Tahoma, Geneva, sans-serif}
-        canvas { border: 1px solid black}
-        ul, li { padding: 10px 15px 15px 10px;  list-style-type: none; text-align: center}
-        #container { position: relative}
-        #container canvas, #overlay { position: absolute}
-        .flex-container { display: flex; flex-direction: row;  align-content: space-between}
-        .sidebar {flex: 1; height:100vh; position:absolute; top:10px; left: 5px}
-        .content {flex: 1; height:100vh; position:absolute; top:10px; left: 15%}
-        .button {border: 1px solid black}
+    body {
+      font-family: Tahoma, Geneva, sans-serif
+    }
+
+    canvas {
+      border: 1px solid black
+    }
+
+    ul,
+    li {
+      padding: 10px 15px 15px 10px;
+      list-style-type: none;
+      text-align: center
+    }
+
+    #container {
+      position: relative
+    }
+
+    #container canvas,
+    #overlay {
+      position: absolute
+    }
+
+    .flex-container {
+      display: flex;
+      flex-direction: row;
+      align-content: space-between
+    }
+
+    .sidebar {
+      flex: 1;
+      height: 100vh;
+      position: absolute;
+      top: 10px;
+      left: 5px
+    }
+
+    .content {
+      flex: 1;
+      height: 100vh;
+      position: absolute;
+      top: 10px;
+      left: 30%
+    }
+
+    .right {
+      flex: 1;
+      height: 100vh;
+      position: absolute;
+      top: 10px;
+      right: 5px
+    }
+
+    .button {
+      border: 1px solid black;
+    }
   </style>
 </head>
+
 <body>
   <div class="flex-container">
-    
-
-    <button disabled id="quickstart-sign-in" name="signin">Sign in</button>
-    <div class="quickstart-user-details-container">
-      Firebase sign-in status: <span id="quickstart-sign-in-status">Unknown</span>
-      <div>Firebase auth <code>currentUser</code> object value:</div>
-      <pre><code id="quickstart-account-details">null</code></pre>
-    </div>
-
     <div class="sidebar">
-      <br/>
+      <br />
       <ul>
-        <li class="annotator" style="background-color: #2678B2">Titre</li>
-        <li class="annotator" style="background-color: #AFC8E7">Sous-titre</li>
-        <li class="annotator" style="background-color: #FD7F28">Paragraphe</li>
-        <li class="annotator" style="background-color: #FDBA7D">Auteur</li>
-        <li class="annotator" style="background-color: #339F34">Citation</li>
-        <li class="annotator" style="background-color: #FDEA7E">Référence</li>
+        <li class="annotator" style="background-color: #2678B2">Titre 1</li>
+        <li class="annotator" style="background-color: #FD7F28">Titre 2</li>
+        <li class="annotator" style="background-color: #339F34">Titre 3</li>
+        <li class="annotator" style="background-color: #FDEA7E">Paragraphe</li>
         <li class="annotator" style="background-color: #9ADE8D">Image</li>
         <li class="annotator" style="background-color: #D83F44">Légende</li>
+        <li class="annotator" style="background-color: #AFC8E7">Tableau</li>
         <li class="annotator" style="background-color: #FD9998">Encadré</li>
-        <li class="annotator" style="background-color: #936ABB">Tableau</li>
-        <li class="annotator" style="background-color: #C5B1D4">Copyright</li>
-        <li class="annotator" style="background-color: #E17AC1">Pied de page</li>
-        <li class="annotator" style="background-color: #BCBC35">Numéro de page</li>
+        <li class="annotator" style="background-color: #936ABB">Auteur</li>
       </ul>
     </div>
-
-
-    <div> &nbsp;  &nbsp;</div>
 
     <div class="content">
       <div>
         <button class="button" id="prev">Previous</button>
         <button class="button" id="next">Next</button>
-        <span class="span" >Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+        <button class="button" id="export" download="export.js">Export</button>
+        <span class="span">Page: <span id="page_num"></span> / <span id="page_count"></span></span>
       </div>
+      <div> &nbsp;</div>
       <div id="container">
         <canvas id="pdfcanvas"></canvas>
         <canvas id="overlay"></canvas>
       </div>
     </div>
-    
   </div>
 
-
-<script> 
-// Auth
-// Your web app's Firebase configuration
-var firebaseConfig = {
-    apiKey: "AIzaSyDT-SNLlbf28ZLMa562KFtI4ZTKHKoFuaA",
-    authDomain: "diagramation.firebaseapp.com",
-    databaseURL: "https://diagramation.firebaseio.com",
-    projectId: "diagramation",
-    storageBucket: "diagramation.appspot.com",
-    messagingSenderId: "470242689527",
-    appId: "1:470242689527:web:d28669fb3368120bb1aef2"
-  };
-  firebase.initializeApp(firebaseConfig);
-  /**
-     * Handles the sign in button press.
-     */
-     function toggleSignIn() {
-      if (firebase.auth().currentUser) {
-        // [START signout]
-        firebase.auth().signOut();
-        // [END signout]
-      } else {
-        // [START authanon]
-        firebase.auth().signInAnonymously().catch(function(error) {
-          // Handle Errors here.
-          var errorCode = error.code;
-          var errorMessage = error.message;
-          // [START_EXCLUDE]
-          if (errorCode === 'auth/operation-not-allowed') {
-            alert('You must enable Anonymous auth in the Firebase Console.');
-          } else {
-            console.error(error);
-          }
-          // [END_EXCLUDE]
-        });
-        // [END authanon]
-      }
-      document.getElementById('quickstart-sign-in').disabled = true;
-    }
+  <script>
 
 
-    /**
-     * initApp handles setting up UI event listeners and registering Firebase auth listeners:
-     *  - firebase.auth().onAuthStateChanged: This listener is called when the user is signed in or
-     *    out, and that is where we update the UI.
-     */
-    function initApp() {
-      // Listening for auth state changes.
-      // [START authstatelistener]
-      firebase.auth().onAuthStateChanged(function(user) {
-        if (user) {
-          // User is signed in.
-          var isAnonymous = user.isAnonymous;
-          var uid = user.uid;
-          // [START_EXCLUDE]
-          document.getElementById('quickstart-sign-in-status').textContent = 'Signed in';
-          document.getElementById('quickstart-sign-in').textContent = 'Sign out';
-          document.getElementById('quickstart-account-details').textContent = JSON.stringify(user, null, '  ');
-          // [END_EXCLUDE]
-        } else {
-          // User is signed out.
-          // [START_EXCLUDE]
-          document.getElementById('quickstart-sign-in-status').textContent = 'Signed out';
-          document.getElementById('quickstart-sign-in').textContent = 'Sign in';
-          document.getElementById('quickstart-account-details').textContent = 'null';
-          // [END_EXCLUDE]
-        }
-        // [START_EXCLUDE]
-        document.getElementById('quickstart-sign-in').disabled = false;
-        // [END_EXCLUDE]
-      });
-      // [END authstatelistener]
+    // PDF
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
 
-      document.getElementById('quickstart-sign-in').addEventListener('click', toggleSignIn, false);
-    }
-
-    window.onload = function() {
-      initApp();
-    };
-
-  // PDF
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
-
-  var url = './dataset/MachineLearningForDummies_extract.pdf',
+    var url = './dataset/MachineLearningForDummies_extract.pdf',
       jsonfile = './dataset/MachineLearningForDummies_extract.json',
       pdfDoc = null,
       pageNum = 1,
@@ -166,287 +123,315 @@ var firebaseConfig = {
       overlay = document.getElementById('overlay'),
       overlayctx = overlay.getContext('2d'),
       shapes = [],
-      isDragging=false,
-      selectedShapeIndex=false,
-      jsonloaded=false,
-      color='black',
-      x, y, dx, dy, newX, newY, 
+      isDragging = false,
+      selectedShapeIndex = false,
+      jsonloaded = false,
+      color = 'black',
+      x, y, dx, dy, newX, newY,
       offsetX, offsetY, cornerX, cornerY;
 
-  /**
-   * Get page info from document, resize canvas accordingly, and render page.
-   * @param num Page number.
-   */
-  function renderPage(num) {
-    pageRendering = true;
-    // Using promise to fetch the page
-    pdfDoc.getPage(num).then(function(page) {
-      var viewport = page.getViewport({scale: scale});
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+    /**
+     * Get page info from document, resize canvas accordingly, and render page.
+     * @param num Page number.
+     */
+    function renderPage(num) {
+      pageRendering = true;
+      // Using promise to fetch the page
+      pdfDoc.getPage(num).then(function (page) {
+        var viewport = page.getViewport({ scale: scale });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
 
-      // Render PDF page into canvas context
-      var renderContext = {
-        canvasContext: ctx,
-        viewport: viewport
-      };
-      var renderTask = page.render(renderContext);
+        // Render PDF page into canvas context
+        var renderContext = {
+          canvasContext: ctx,
+          viewport: viewport
+        };
+        var renderTask = page.render(renderContext);
 
-      // Wait for rendering to finish
-      renderTask.promise.then(function() {
-        pageRendering = false;
-        if (pageNumPending !== null) {
-          // New page rendering is pending
-          renderPage(pageNumPending);
-          pageNumPending = null;
-        }
-      annotate(pageNum);
-      if (!jsonloaded) {
-        loadJson(jsonfile);
-      }
-      
+        // Wait for rendering to finish
+        renderTask.promise.then(function () {
+          pageRendering = false;
+          if (pageNumPending !== null) {
+            // New page rendering is pending
+            renderPage(pageNumPending);
+            pageNumPending = null;
+          }
+          annotate(pageNum);
+          if (!jsonloaded) {
+            loadJson(jsonfile);
+          }
+
+        });
       });
-    });
 
-    // Update page counters
-    document.getElementById('page_num').textContent = num;
-  }
-
-  /**
-   * If another page rendering in progress, waits until the rendering is
-   * finised. Otherwise, executes rendering immediately.
-   */
-  function queueRenderPage(num) {
-    if (pageRendering) {
-      pageNumPending = num;
-    } else {
-      renderPage(num);
+      // Update page counters
+      document.getElementById('page_num').textContent = num;
     }
-  }
 
-  /**
-   * Displays previous page.
-   */
-  function onPrevPage() {
-    if (pageNum <= 1) {
-      return;
+    /**
+     * If another page rendering in progress, waits until the rendering is
+     * finised. Otherwise, executes rendering immediately.
+     */
+    function queueRenderPage(num) {
+      if (pageRendering) {
+        pageNumPending = num;
+      } else {
+        renderPage(num);
+      }
     }
-    pageNum--;
-    selectedShapeIndex=false;
-    queueRenderPage(pageNum);
-  }
-  document.getElementById('prev').addEventListener('click', onPrevPage);
 
-  /**
-   * Displays next page.
-   */
-  function onNextPage() {
-    if (pageNum >= pdfDoc.numPages) {
-      return;
+    /**
+     * Displays previous page.
+     */
+    function onPrevPage() {
+      if (pageNum <= 1) {
+        return;
+      }
+      pageNum--;
+      selectedShapeIndex = false;
+      queueRenderPage(pageNum);
     }
-    pageNum++;
-    selectedShapeIndex=false;
-    queueRenderPage(pageNum);
-  }
-  document.getElementById('next').addEventListener('click', onNextPage);
+    document.getElementById('prev').addEventListener('click', onPrevPage);
 
-  function loadJson(url) {
-    // get shapes from Google Vision generated json
-    fetch(url)
-    .then(response => response.json())
-    .then(response => { 
-        for (var i=0; i<response.responses.length; i++) {
-          shapes[i] = [];
-          var blocks = response.responses[i].fullTextAnnotation.pages[0].blocks;
-          var marge = 5;
-          for (var j=0; j < blocks.length; j++) {
-                var coords = blocks[j].boundingBox.normalizedVertices;
-                // convert normalizedVertices to regular coords
-                coords = coords.map(function(element) { return [element.x * overlay.width, 
-                                                                element.y * overlay.height] });
-                x = coords[0][0] - marge;
-                y = coords[0][1] - marge;
-                dx = coords[2][0] + marge*2 - x;
-                dy = coords[2][1] + marge*2 - y;
-                shapes[i].push({x, y, dx, dy, color});
+    /**
+     * Displays next page.
+     */
+    function onNextPage() {
+      if (pageNum >= pdfDoc.numPages) {
+        return;
+      }
+      pageNum++;
+      selectedShapeIndex = false;
+      queueRenderPage(pageNum);
+    }
+    document.getElementById('next').addEventListener('click', onNextPage);
+
+    function onExport() {
+      var text = JSON.stringify(shapes);
+      var filename = "annotator.js";
+      download(filename, text);
+    }
+    document.getElementById('export').addEventListener('click', onExport);
+
+    function loadJson(url) {
+      // get shapes from Google Vision generated json
+      fetch(url)
+        .then(response => response.json())
+        .then(response => {
+          for (var i = 0; i < response.responses.length; i++) {
+            shapes[i] = [];
+            var blocks = response.responses[i].fullTextAnnotation.pages[0].blocks;
+            var marge = 5;
+            for (var j = 0; j < blocks.length; j++) {
+              var coords = blocks[j].boundingBox.normalizedVertices;
+              // convert normalizedVertices to regular coords
+              coords = coords.map(function (element) {
+                return [element.x * overlay.width,
+                element.y * overlay.height]
+              });
+              x = coords[0][0] - marge;
+              y = coords[0][1] - marge;
+              dx = coords[2][0] + marge * 2 - x;
+              dy = coords[2][1] + marge * 2 - y;
+              shapes[i].push({ x, y, dx, dy, color });
+            }
+          }
+        });
+      jsonloaded = true;
+    }
+
+    function annotate(num) {
+      // Annotator
+      // https://riptutorial.com/html5-canvas/example/18918/dragging-circles---rectangles-around-the-canvas
+
+      refreshOverlay = setInterval(drawAll, 500);
+      overlay.width = canvas.width;
+      overlay.height = canvas.height;
+      // used to calc canvas position relative to window
+      function reOffset() {
+        var BB = overlay.getBoundingClientRect();
+        offsetX = BB.left;
+        offsetY = BB.top;
+      };
+      reOffset();
+      window.onscroll = function (e) { reOffset(); }
+      window.onresize = function (e) { reOffset(); }
+      canvas.onresize = function (e) { reOffset(); }
+
+      // clear the canvas and 
+      // redraw all shapes in their current positions every 10ms
+      function drawAll() {
+        overlayctx.clearRect(0, 0, overlay.width, overlay.height)
+        for (var i = 0; i < shapes[pageNum - 1].length; i++) {
+          shape = shapes[pageNum - 1][i];
+          overlayctx.lineWidth = 1;
+          overlayctx.strokeStyle = shape.color;
+          if (i == selectedShapeIndex) {
+            overlayctx.lineWidth = 2;
+          }
+          // convert coords to relative distance
+          overlayctx.strokeRect(shape.x, shape.y, shape.dx, shape.dy);
+        }
+      };
+
+      overlay.addEventListener('mousedown', e => {
+        selectedShapeIndex = false
+        overlayctx.strokeStyle = 'black';
+        clearInterval(refreshOverlay)
+        isDragging = true
+        // calculate the current mouse position
+        x = parseInt(e.clientX - offsetX);
+        y = parseInt(e.clientY - offsetY);
+        // if mouse is in a shape, select it
+        for (var i = 0; i < shapes[pageNum - 1].length; i++) {
+          shape = shapes[pageNum - 1][i]
+          if (x > shape.x && x < shape.x + shape.dx &&
+            y > shape.y && y < shape.y + shape.dy) {
+            selectedShapeIndex = i;
           }
         }
-    });
-    jsonloaded=true;
-  }
+      });
 
-  function annotate(num) {
-    // Annotator
-    // https://riptutorial.com/html5-canvas/example/18918/dragging-circles---rectangles-around-the-canvas
-
-    refreshOverlay = setInterval(drawAll, 500);
-    overlay.width = canvas.width;
-    overlay.height = canvas.height;
-    // used to calc canvas position relative to window
-    function reOffset() {
-      var BB = overlay.getBoundingClientRect();
-      offsetX = BB.left;
-      offsetY = BB.top;        
-    };
-    reOffset();
-    window.onscroll = function(e){ reOffset(); }
-    window.onresize = function(e){ reOffset(); }
-    canvas.onresize = function(e){ reOffset(); }
-
-    // clear the canvas and 
-    // redraw all shapes in their current positions every 10ms
-    function drawAll() {
-      overlayctx.clearRect(0, 0, overlay.width, overlay.height)
-      for (var i=0; i<shapes[pageNum-1].length; i++) {
-        shape = shapes[pageNum-1][i];
-        overlayctx.lineWidth = 1;
-        overlayctx.strokeStyle = shape.color;
-        if(i == selectedShapeIndex) { 
-          overlayctx.lineWidth = 2;
-         }
-         // convert coords to relative distance
-         overlayctx.strokeRect(shape.x, shape.y, shape.dx, shape.dy);
-        }
-    };
-
-    overlay.addEventListener('mousedown', e => {
-      selectedShapeIndex = false
-      overlayctx.strokeStyle = 'black';
-      clearInterval(refreshOverlay)
-      isDragging = true
-      // calculate the current mouse position
-      x = parseInt(e.clientX - offsetX);
-      y = parseInt(e.clientY - offsetY);
-      // if mouse is in a shape, select it
-      for (var i=0; i<shapes[pageNum-1].length; i++) {
-        shape = shapes[pageNum-1][i]
-        if(x>shape.x && x<shape.x+shape.dx && 
-           y>shape.y && y<shape.y+shape.dy) {
-          selectedShapeIndex = i;
-        }
-      }
-    });
-
-    overlay.addEventListener('mousemove', e => {
-      // return if we're not dragging
-      if(!isDragging){return}
-      x2 = parseInt(e.clientX - offsetX);
-      y2 = parseInt(e.clientY - offsetY);
-      dx = x2 - x;
-      dy = y2 - y;
-      if(Number.isInteger(selectedShapeIndex)) {
-        // redraw selected rectangle
-        drawAll();
-        shape = shapes[pageNum-1][selectedShapeIndex];
-        shape.x = x2;
-        shape.y = y2;
-      } else {
+      overlay.addEventListener('mousemove', e => {
+        // return if we're not dragging
+        if (!isDragging) { return }
+        x2 = parseInt(e.clientX - offsetX);
+        y2 = parseInt(e.clientY - offsetY);
+        dx = x2 - x;
+        dy = y2 - y;
+        if (Number.isInteger(selectedShapeIndex)) {
+          // redraw selected rectangle
+          drawAll();
+          shape = shapes[pageNum - 1][selectedShapeIndex];
+          shape.x = x2;
+          shape.y = y2;
+        } else {
           // draw a rectangle
           drawAll();
           overlayctx.strokeRect(x, y, dx, dy);
-      }
-      
-    });
-        
-    overlay.addEventListener('mouseup', e => {
-      // avoid double event
-      if(!isDragging){return}
-      // the drag is over -- clear the isDragging flag
-      isDragging = false
-      refreshOverlay = setInterval(drawAll, 100)
-      // how far has the mouse dragged from its previous mousemove position?
-      x2 = parseInt(e.clientX - offsetX);
-      y2 = parseInt(e.clientY - offsetY);
-      dx = x2 - x;
-      dy = y2 - y;
-      if (dx == 0 || dy == 0) {return};
-
-      if(Number.isInteger(selectedShapeIndex)) {
-        // move rectangle
-        shape = shapes[pageNum-1][selectedShapeIndex];
-        shape.x = x2;
-        shape.y = y2;
         }
-      else 
-      {
-        // add new shape
-        shapes[pageNum-1].push({x, y, dx, dy, color});
-        //selectedShapeIndex = shapes[pageNum-1].length-1;
-        //shape = shapes[pageNum-1][selectedShapeIndex];
-        /*
-        // remove all rectangles inside selections
-        var toremove = [];
-        for (var i=0; i<shapes[pageNum-1].length; i++) {
-          inShape = shapes[pageNum-1][i]
-          if(inShape.x>shape.x && inShape.x+inShape.dx<shape.x+shape.dx && 
-             inShape.y>shape.y && inShape.y+inShape.dy<shape.y+shape.dy) {
-            toremove.splice(1, 0, i)
-          }
+
+      });
+
+      overlay.addEventListener('mouseup', e => {
+        // avoid double event
+        if (!isDragging) { return }
+        // the drag is over -- clear the isDragging flag
+        isDragging = false
+        refreshOverlay = setInterval(drawAll, 100)
+        // how far has the mouse dragged from its previous mousemove position?
+        x2 = parseInt(e.clientX - offsetX);
+        y2 = parseInt(e.clientY - offsetY);
+        dx = x2 - x;
+        dy = y2 - y;
+        if (dx == 0 || dy == 0) { return };
+
+        if (Number.isInteger(selectedShapeIndex)) {
+          // move rectangle
+          shape = shapes[pageNum - 1][selectedShapeIndex];
+          shape.x = x2;
+          shape.y = y2;
         }
-        console.log(toremove)
-        for (i in toremove) {
-          shapes[pageNum-1].splice(i, 1);
-        }*/
-      }
-    });
-
-    overlay.addEventListener('mouseout', e => {
-      // return if we're not dragging
-      if(!isDragging){return}
-      // the drag is over -- clear the isDragging flag
-      isDragging = false
-    });
-
-    // delete shape
-    document.addEventListener('keydown', e => {
-      e.preventDefault();
-      if(!selectedShapeIndex){return}
-      if (["Backspace", "Delete", "x"].includes(e.key)) {
-        shapes[pageNum-1].splice(selectedShapeIndex, 1);
-        selectedShapeIndex = false;
-      }
-    });
-  }
-
-  function changeColor(e) {
-        // change color of selected shape
-        shape = shapes[pageNum-1][selectedShapeIndex];
-        shape.color = e.target.style['background-color']
-
-        // if we have shape of the exact same size and position
-        // in other pages, change their color too
-        var limit = 10;
-        for (var i=pageNum-1; i<shapes.length; i++) {
-          for (var j=0; j<shapes[i].length; j++) {
-            nextshape = shapes[i][j];
-            if (Math.abs(nextshape.x - shape.x) < limit && 
-                Math.abs(nextshape.y - shape.y) < limit &&
-                Math.abs(nextshape.dx - shape.dx) < limit && 
-                Math.abs(nextshape.dy - shape.dy) < limit) {
-              nextshape.color = shape.color;
+        else {
+          // add new shape
+          shapes[pageNum - 1].push({ x, y, dx, dy, color });
+          selectedShapeIndex = shapes[pageNum - 1].length - 1;
+          //shape = shapes[pageNum-1][selectedShapeIndex];
+          /*
+          // remove all rectangles inside selections
+          var toremove = [];
+          for (var i=0; i<shapes[pageNum-1].length; i++) {
+            inShape = shapes[pageNum-1][i]
+            if(inShape.x>shape.x && inShape.x+inShape.dx<shape.x+shape.dx && 
+               inShape.y>shape.y && inShape.y+inShape.dy<shape.y+shape.dy) {
+              toremove.splice(1, 0, i)
             }
           }
+          console.log(toremove)
+          for (i in toremove) {
+            shapes[pageNum-1].splice(i, 1);
+          }*/
         }
-  }
+      });
 
-  var items = document.getElementsByClassName("annotator");
+      overlay.addEventListener('mouseout', e => {
+        // return if we're not dragging
+        if (!isDragging) { return }
+        // the drag is over -- clear the isDragging flag
+        isDragging = false
+      });
+
+      // delete shape
+      document.addEventListener('keydown', e => {
+        e.preventDefault();
+        if (!selectedShapeIndex) { return }
+        if (["Backspace", "Delete", "x"].includes(e.key)) {
+          shapes[pageNum - 1].splice(selectedShapeIndex, 1);
+          selectedShapeIndex = false;
+        }
+      });
+    }
+
+    function changeColor(e) {
+      // change color of selected shape
+      shape = shapes[pageNum - 1][selectedShapeIndex];
+      shape.color = e.target.style['background-color'];
+      shape.label = e.target.textContent;
+
+      // if we have shape of the exact same size and position
+      // in other pages, change their color too
+      var limit = 10;
+      for (var i = pageNum - 1; i < shapes.length; i++) {
+        for (var j = 0; j < shapes[i].length; j++) {
+          nextshape = shapes[i][j];
+          if (Math.abs(nextshape.x - shape.x) < limit &&
+            Math.abs(nextshape.y - shape.y) < limit &&
+            Math.abs(nextshape.dx - shape.dx) < limit &&
+            Math.abs(nextshape.dy - shape.dy) < limit) {
+            nextshape.color = shape.color;
+          }
+        }
+      }
+    }
+    var items = document.getElementsByClassName("annotator");
     for (var i = 0; i < items.length; i++) {
-    items[i].addEventListener("click", changeColor);
-  }
+      items[i].addEventListener("click", changeColor);
+    }
 
+    function download(file, text) {
+      //creating an invisible element 
+      var element = document.createElement('a');
+      element.setAttribute('href',
+        'data:text/plain;charset=utf-8, '
+        + encodeURIComponent(text));
+      element.setAttribute('download', file);
 
-  /**
-   * Asynchronously downloads PDF.
-   */
-  pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
-    pdfDoc = pdfDoc_
-    document.getElementById('page_count').textContent = pdfDoc.numPages
-    // Initial/first page rendering
-    renderPage(pageNum);
-  });
+      // Above code is equivalent to 
+      // <a href="path of file" download="file name"> 
 
+      document.body.appendChild(element);
 
-</script>
+      //onClick property 
+      element.click();
+
+      document.body.removeChild(element);
+    }
+
+    window.addEventListener("load", function () {
+      /**
+      * Asynchronously downloads PDF.
+      */
+      pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {
+        pdfDoc = pdfDoc_
+        document.getElementById('page_count').textContent = pdfDoc.numPages
+        // Initial/first page rendering
+        renderPage(pageNum);
+      });
+    });
+
+  </script>
 
 </body>
+
 </html>
