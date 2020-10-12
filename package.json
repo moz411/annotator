@@ -1,0 +1,17 @@
+{
+  "name": "annotator",
+  "version": "0.1.0",
+  "description": "",
+  "author": "Moz <moz@free.fr>",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@google-cloud/vision": "^2.1.2",
+    "colormap": "^2.3.1",
+    "express": "^4.16.1",
+    "jslint": "^0.12.1",
+    "require": "^2.4.20"
+  }
+}

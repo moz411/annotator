@@ -105,14 +105,12 @@
   </div>
 
   <script>
-
-
     // PDF
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
 
-    var url = './dataset/MachineLearningForDummies_extract.pdf',
-      jsonfile = './dataset/MachineLearningForDummies_extract.json',
+    var url = 'http://localhost:8080/dataset/DU/DU_1.2.pdf',
+      jsonfile = 'http://localhost:8080/dataset/DU/DU_1.2.json',
       pdfDoc = null,
       pageNum = 1,
       pageRendering = false,
@@ -138,7 +136,9 @@
       pageRendering = true;
       // Using promise to fetch the page
       pdfDoc.getPage(num).then(function (page) {
-        var viewport = page.getViewport({ scale: scale });
+        var viewport = page.getViewport({
+          scale: scale
+        });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
@@ -161,7 +161,10 @@
           if (!jsonloaded) {
             loadJson(jsonfile);
           }
+        });
 
+        page.getTextContent().then(function (text) {
+            console.log(text);
         });
       });
 
@@ -214,9 +217,9 @@
     }
     document.getElementById('export').addEventListener('click', onExport);
 
-    function loadJson(url) {
+    function loadJson(jsonfile) {
       // get shapes from Google Vision generated json
-      fetch(url)
+      fetch(jsonfile)
         .then(response => response.json())
         .then(response => {
           for (var i = 0; i < response.responses.length; i++) {
@@ -228,13 +231,20 @@
               // convert normalizedVertices to regular coords
               coords = coords.map(function (element) {
                 return [element.x * overlay.width,
-                element.y * overlay.height]
+                  element.y * overlay.height
+                ]
               });
               x = coords[0][0] - marge;
               y = coords[0][1] - marge;
               dx = coords[2][0] + marge * 2 - x;
               dy = coords[2][1] + marge * 2 - y;
-              shapes[i].push({ x, y, dx, dy, color });
+              shapes[i].push({
+                x,
+                y,
+                dx,
+                dy,
+                color
+              });
             }
           }
         });
@@ -255,9 +265,15 @@
         offsetY = BB.top;
       };
       reOffset();
-      window.onscroll = function (e) { reOffset(); }
-      window.onresize = function (e) { reOffset(); }
-      canvas.onresize = function (e) { reOffset(); }
+      window.onscroll = function (e) {
+        reOffset();
+      }
+      window.onresize = function (e) {
+        reOffset();
+      }
+      canvas.onresize = function (e) {
+        reOffset();
+      }
 
       // clear the canvas and 
       // redraw all shapes in their current positions every 10ms
@@ -295,7 +311,9 @@
 
       overlay.addEventListener('mousemove', e => {
         // return if we're not dragging
-        if (!isDragging) { return }
+        if (!isDragging) {
+          return
+        }
         x2 = parseInt(e.clientX - offsetX);
         y2 = parseInt(e.clientY - offsetY);
         dx = x2 - x;
@@ -316,7 +334,9 @@
 
       overlay.addEventListener('mouseup', e => {
         // avoid double event
-        if (!isDragging) { return }
+        if (!isDragging) {
+          return
+        }
         // the drag is over -- clear the isDragging flag
         isDragging = false
         refreshOverlay = setInterval(drawAll, 100)
@@ -325,17 +345,24 @@
         y2 = parseInt(e.clientY - offsetY);
         dx = x2 - x;
         dy = y2 - y;
-        if (dx == 0 || dy == 0) { return };
+        if (dx == 0 || dy == 0) {
+          return
+        };
 
         if (Number.isInteger(selectedShapeIndex)) {
           // move rectangle
           shape = shapes[pageNum - 1][selectedShapeIndex];
           shape.x = x2;
           shape.y = y2;
-        }
-        else {
+        } else {
           // add new shape
-          shapes[pageNum - 1].push({ x, y, dx, dy, color });
+          shapes[pageNum - 1].push({
+            x,
+            y,
+            dx,
+            dy,
+            color
+          });
           selectedShapeIndex = shapes[pageNum - 1].length - 1;
           //shape = shapes[pageNum-1][selectedShapeIndex];
           /*
@@ -357,7 +384,9 @@
 
       overlay.addEventListener('mouseout', e => {
         // return if we're not dragging
-        if (!isDragging) { return }
+        if (!isDragging) {
+          return
+        }
         // the drag is over -- clear the isDragging flag
         isDragging = false
       });
@@ -365,7 +394,9 @@
       // delete shape
       document.addEventListener('keydown', e => {
         e.preventDefault();
-        if (!selectedShapeIndex) { return }
+        if (!selectedShapeIndex) {
+          return
+        }
         if (["Backspace", "Delete", "x"].includes(e.key)) {
           shapes[pageNum - 1].splice(selectedShapeIndex, 1);
           selectedShapeIndex = false;
@@ -403,8 +434,8 @@
       //creating an invisible element 
       var element = document.createElement('a');
       element.setAttribute('href',
-        'data:text/plain;charset=utf-8, '
-        + encodeURIComponent(text));
+        'data:text/plain;charset=utf-8, ' +
+        encodeURIComponent(text));
       element.setAttribute('download', file);
 
       // Above code is equivalent to 
@@ -420,16 +451,17 @@
 
     window.addEventListener("load", function () {
       /**
-      * Asynchronously downloads PDF.
-      */
+       * Asynchronously downloads PDF.
+       */
       pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {
-        pdfDoc = pdfDoc_
-        document.getElementById('page_count').textContent = pdfDoc.numPages
+        pdfDoc = pdfDoc_;
+        document.getElementById('page_count').textContent = pdfDoc.numPages;
         // Initial/first page rendering
         renderPage(pageNum);
+      }).catch(function (error) {
+        console.log(error)
       });
     });
-
   </script>
 
 </body>
