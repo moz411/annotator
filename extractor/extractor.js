@@ -5,67 +5,8 @@ var pdfjsLib = require("pdfjs-dist/es5/build/pdf.js"),
     url = 'http://localhost:8080/dataset/MachineLearningForDummies/extract.pdf',
     jsonfile = 'http://localhost:8080/dataset/MachineLearningForDummies/extract.json',
     shapes = 'http://localhost:8080/dataset/MachineLearningForDummies/annotation.json',
-    canvas = {},
     color = 'black',
-    scale = 1;
-
-pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {
-    pdfDoc = pdfDoc_;
-    loadJson(jsonfile);
-}).catch(function (error) {
-    console.log(error)
-});
-
-function loadJson(jsonfile) {
-    // get shapes from Google Vision generated json
-    fetch(jsonfile)
-        .then(response => response.json())
-        .then(response => {
-            for (var i = 0; i < response.responses.length; i++) {
-                shapes[i] = [];
-                
-                var blocks = response.responses[i].fullTextAnnotation.pages[0].blocks,
-                    marge = 5;
-
-                pdfDoc.getPage(i+1).then(function (page) {
-                    canvas = page.getViewport({
-                        scale: scale
-                    });
-                });
-                
-                for (var j = 0; j < blocks.length; j++) {
-                    var coords = blocks[j].boundingBox.normalizedVertices;
-                    
-                    // convert normalizedVertices to regular coords
-                    coords = coords.map(function (element) {
-                        return [element.x * canvas.width,
-                                element.y * canvas.height]
-                    });
-                    x = coords[0][0] - marge;
-                    y = coords[0][1] - marge;
-                    dx = coords[2][0] + marge * 2 - x;
-                    dy = coords[2][1] + marge * 2 - y;
-                    shapes[i].push({
-                        x,
-                        y,
-                        dx,
-                        dy,
-                        color
-                    });
-                }
-            }
-        }).catch(function (error) {
-            console.log(error)
-        });
-}
-
-function extractFeaturesFromPdf(pdf, shapes) {
-    // extract features from pdf file using 
-    // Regions of Interest defined in shapes
-    for (var i = 0; i < shapes.length; i++) {
-        shape = shapes[i];
-    }
-};
+    scale = 1.0;
 
 function convertToCanvasCoords(x, y, width, height, scale = 1) {
     return (
@@ -74,3 +15,32 @@ function convertToCanvasCoords(x, y, width, height, scale = 1) {
         width * scale,
         height * scale);
 };
+
+pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {
+    pdfDoc = pdfDoc_;
+    fetch(shapes)
+    .then(response => response.json())
+    .then(response => {
+        for (var num = 0; num < response.length; num++) {
+            
+            shape = response[num];
+            console.log(shape);
+            pdfDoc.getPage(num+1).then(function (page) {
+                var viewport = page.getViewport(scale);
+                console.log(viewport);
+                page.getTextContent().then(function (text) {
+                    var xs = [], ys = [];
+                    text.items.forEach(function (item) {
+                        //.log(item);
+                        var tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
+                        //console.log(tx);
+                        // avoiding tx * [0,0,1] taking x, y directly from the transform
+                        xs.push(tx[4]); ys.push(tx[5]);
+                      });
+                });
+            });
+        }
+    })  
+}).catch(function (error) {
+    console.log(error)
+});
