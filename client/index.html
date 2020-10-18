@@ -109,13 +109,14 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
 
-    var url = 'http://localhost:8080/dataset/DU/DU_1.2.pdf',
-      jsonfile = 'http://localhost:8080/dataset/DU/DU_1.2.json',
+    var url = 'http://localhost:8080/dataset/MachineLearningForDummies/extract.pdf',
+      jsonfile = 'http://localhost:8080/dataset/MachineLearningForDummies/output-1-to-12.json',
       pdfDoc = null,
       pageNum = 1,
       pageRendering = false,
       pageNumPending = null,
       scale = 1,
+      marge = 0,
       canvas = document.getElementById('pdfcanvas'),
       ctx = canvas.getContext('2d'),
       overlay = document.getElementById('overlay'),
@@ -161,10 +162,6 @@
           if (!jsonloaded) {
             loadJson(jsonfile);
           }
-        });
-
-        page.getTextContent().then(function (text) {
-            console.log(text);
         });
       });
 
@@ -223,20 +220,32 @@
         .then(response => {
           for (var i = 0; i < response.responses.length; i++) {
             shapes[i] = [];
-            var blocks = response.responses[i].fullTextAnnotation.pages[0].blocks;
-            var marge = 5;
+            try {
+              var blocks = response.responses[i].fullTextAnnotation.pages[0].blocks;
+            } catch (error) {
+              var blocks = response.responses[i];
+            }
+            
             for (var j = 0; j < blocks.length; j++) {
-              var coords = blocks[j].boundingBox.normalizedVertices;
-              // convert normalizedVertices to regular coords
-              coords = coords.map(function (element) {
-                return [element.x * overlay.width,
-                  element.y * overlay.height
-                ]
-              });
-              x = coords[0][0] - marge;
-              y = coords[0][1] - marge;
-              dx = coords[2][0] + marge * 2 - x;
-              dy = coords[2][1] + marge * 2 - y;
+              try {
+                var coords = blocks[j].boundingBox.normalizedVertices;
+                coords = coords.map(function (element) {
+                  return [element.x * overlay.width,
+                          element.y * overlay.height]
+                });
+                // convert normalizedVertices to regular coords
+                x = coords[0][0] - marge;
+                y = coords[0][1] - marge;
+                dx = coords[2][0] + marge * 2 - x;
+                dy = coords[2][1] + marge * 2 - y;
+              } catch (error) {
+                // json comes from pdfminer
+                x = blocks[j].x;
+                y = blocks[j].y;
+                dx = blocks[j].dx;
+                dy = blocks[j].dy;
+              }
+              
               shapes[i].push({
                 x,
                 y,
@@ -293,7 +302,7 @@
       overlay.addEventListener('mousedown', e => {
         selectedShapeIndex = false
         overlayctx.strokeStyle = 'black';
-        clearInterval(refreshOverlay)
+        //clearInterval(refreshOverlay)
         isDragging = true
         // calculate the current mouse position
         x = parseInt(e.clientX - offsetX);
@@ -309,6 +318,7 @@
       });
 
       overlay.addEventListener('mousemove', e => {
+        return;
         // return if we're not dragging
         if (!isDragging) {
           return
@@ -332,6 +342,7 @@
       });
 
       overlay.addEventListener('mouseup', e => {
+        return;
         // avoid double event
         if (!isDragging) {
           return
