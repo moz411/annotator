@@ -93,8 +93,10 @@
       <div>
         <button class="button" id="prev">Previous</button>
         <button class="button" id="next">Next</button>
-        <button class="button" id="export" download="export.js">Export</button>
-        <span class="span">Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+        <span class="span">Page: <span id="page_num"></span> / <span id="page_count"></span></span><br>
+        <button class="button" id="export">Export shapes</button>
+        <input type="file" id="import_shapes" style="display: none;" />
+        <input type="button" value="Import shapes" onclick="document.getElementById('import_shapes').click();" />
       </div>
       <div> &nbsp;</div>
       <div id="container">
@@ -213,8 +215,21 @@
     }
     document.getElementById('export').addEventListener('click', onExport);
 
+    // If user want to load predefined shapes
+    function handleImportShapes(evt) {
+      reader = new FileReader();
+      reader.readAsText(evt.target.files[0]);
+      reader.onload = function(e) {
+        // console.log(reader.result);
+        shapes = JSON.parse(reader.result);
+        jsonloaded = true;
+      }
+    }
+    document.getElementById('import_shapes').addEventListener('change', handleImportShapes, false);
+
+    // Convert datafile extracted from Google Vision to local format
     function loadJson(jsonfile) {
-      // get shapes from Google Vision generated json
+      // get generated json
       fetch(jsonfile)
         .then(response => response.json())
         .then(response => {
@@ -225,13 +240,14 @@
             } catch (error) {
               var blocks = response.responses[i];
             }
-            
+
             for (var j = 0; j < blocks.length; j++) {
               try {
                 var coords = blocks[j].boundingBox.normalizedVertices;
                 coords = coords.map(function (element) {
                   return [element.x * overlay.width,
-                          element.y * overlay.height]
+                    element.y * overlay.height
+                  ]
                 });
                 // convert normalizedVertices to regular coords
                 x = coords[0][0] - marge;
@@ -245,7 +261,7 @@
                 dx = blocks[j].dx;
                 dy = blocks[j].dy;
               }
-              
+
               shapes[i].push({
                 x,
                 y,
@@ -259,10 +275,9 @@
       jsonloaded = true;
     }
 
+    // Annotator
+    // https://riptutorial.com/html5-canvas/example/18918/dragging-circles---rectangles-around-the-canvas
     function annotate(num) {
-      // Annotator
-      // https://riptutorial.com/html5-canvas/example/18918/dragging-circles---rectangles-around-the-canvas
-
       refreshOverlay = setInterval(drawAll, 500);
       overlay.width = canvas.width;
       overlay.height = canvas.height;
@@ -414,8 +429,8 @@
       });
     }
 
+    // change color of selected shape
     function changeColor(e) {
-      // change color of selected shape
       shape = shapes[pageNum - 1][selectedShapeIndex];
       shape.color = e.target.style['background-color'];
       shape.label = e.target.textContent;

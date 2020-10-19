@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# coding: utf-8
 
+import sys
 import json
 from odf.opendocument import OpenDocumentText
 from odf.style import (Style, TextProperties, ParagraphProperties,
@@ -9,8 +9,8 @@ from odf.text import (H, P, List, ListItem, ListStyle, ListLevelStyleNumber,
                       ListLevelStyleBullet)
 from odf import teletype
 
-source_file = '../dataset/MachineLearningForDummies/extracted.json'
-destination_file = '../dataset/MachineLearningForDummies/extracted.odt'
+source_file = sys.argv[1]
+destination_file = source_file.replace('.json', '.odt')
 with open(source_file, 'r') as file:
     extracted = json.load(file)
 

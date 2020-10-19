@@ -1,19 +1,13 @@
 #!/usr/bin/env python
 
-import io
-import pprint as pp
+import sys
 import json
 import string
 import random
-import tempfile
-import cv2
-from PIL import Image
 from statistics import mode
-from pdfminer.high_level import extract_pages
-from pdfminer.layout import LTTextContainer, LTChar, LTImage, LTRect, LTFigure, LTTextBox
-from pdf2image import convert_from_path, convert_from_bytes
+import detect
 
-pdf_file = '../dataset/MachineLearningForDummies/extract.pdf'
+pdf_file = sys.argv[1]
 extract_vision_file = '../dataset/MachineLearningForDummies/output-1-to-12.json'
 user_annotation_file = '../dataset/MachineLearningForDummies/annotator.json'
 extracted_file = '../dataset/MachineLearningForDummies/extracted.json'
@@ -65,15 +59,17 @@ for num, page in enumerate(extract_pages(pdf_file)):
 # with open("pdf.json", "w") as file:
 #    json.dump({'responses': pdf}, file)
 
+# Detect text blocks in document using Google Vision
 extracted = []
 with open(extract_vision_file, 'r') as file:
     extract_vision = json.load(file)
 
 for page in extract_vision['responses']:
     elements = []
-    width = page['fullTextAnnotation']['pages'][0]['width']
-    height = page['fullTextAnnotation']['pages'][0]['height']
-    blocks = page['fullTextAnnotation']['pages'][0]['blocks']
+    fullTextAnnotation = page['fullTextAnnotation']['pages'][0]
+    width = fullTextAnnotation['width']
+    height = fullTextAnnotation['height']
+    blocks = fullTextAnnotation['blocks']
     for num, block in enumerate(blocks):          
         res = {}
         coords = block['boundingBox']['normalizedVertices']
