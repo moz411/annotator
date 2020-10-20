@@ -47,7 +47,7 @@
       height: 100vh;
       position: absolute;
       top: 10px;
-      left: 5px
+      left: 20%;
     }
 
     .content {
@@ -55,7 +55,7 @@
       height: 100vh;
       position: absolute;
       top: 10px;
-      left: 30%
+      left: 30%;
     }
 
     .right {
@@ -63,18 +63,38 @@
       height: 100vh;
       position: absolute;
       top: 10px;
-      right: 5px
+      left: 65%;
     }
 
     .button {
       border: 1px solid black;
+    }
+
+    .dropbox {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -100px;
+      margin-left: -250px;
+      width: 500px;
+      height: 200px;
+      border: 4px dashed black;
+    }
+
+    .dropbox button {
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      line-height: 170px;
+      color: black;
+      font-family: Arial;
     }
   </style>
 </head>
 
 <body>
   <div class="flex-container">
-    <div class="sidebar">
+    <div class="sidebar" hidden>
       <br />
       <ul>
         <li class="annotator" style="background-color: #2678B2">Titre 1</li>
@@ -89,20 +109,26 @@
       </ul>
     </div>
 
-    <div class="content">
-      <div>
-        <button class="button" id="prev">Previous</button>
-        <button class="button" id="next">Next</button>
-        <span class="span">Page: <span id="page_num"></span> / <span id="page_count"></span></span><br>
-        <button class="button" id="export">Export shapes</button>
-        <input type="file" id="import_shapes" style="display: none;" />
-        <input type="button" value="Import shapes" onclick="document.getElementById('import_shapes').click();" />
-      </div>
-      <div> &nbsp;</div>
+    <div class="dropbox">
+      <input type="file" id="load_pdf" accept="application/pdf" style="display: none;">
+      <input type="button" value="Select a pdf file" onclick="document.getElementById('load_pdf').click();" />
+    </div>
+
+
+    <div class="content" hidden>
       <div id="container">
         <canvas id="pdfcanvas"></canvas>
         <canvas id="overlay"></canvas>
       </div>
+    </div>
+
+    <div class="right" hidden>
+      <span class="span">Page: <span id="page_num"></span> / <span id="page_count"></span></span><br>
+      <button class="button" id="prev">Previous</button>
+      <button class="button" id="next">Next</button><br>
+      <button class="button" id="export_shapes">Export shapes</button>
+      <input type="file" id="import_shapes" accept="application/json" style="display: none;" />
+      <input type="button" value="Import shapes" onclick="document.getElementById('import_shapes').click();" />
     </div>
   </div>
 
@@ -113,6 +139,7 @@
 
     var url = 'http://localhost:8080/dataset/MachineLearningForDummies/extract.pdf',
       jsonfile = 'http://localhost:8080/dataset/MachineLearningForDummies/output-1-to-12.json',
+      shapes_filename = 'shapes.json',
       pdfDoc = null,
       pageNum = 1,
       pageRendering = false,
@@ -208,24 +235,46 @@
     }
     document.getElementById('next').addEventListener('click', onNextPage);
 
-    function onExport() {
+    // Export shapes array to file
+    function onExportShapes() {
       var text = JSON.stringify(shapes);
-      var filename = "annotator.json";
-      download(filename, text);
+      download(shapes_filename, text);
     }
-    document.getElementById('export').addEventListener('click', onExport);
+    document.getElementById('export_shapes').addEventListener('click', onExportShapes);
+    // Show the export as downloadable file
+    function download(file, text) {
+      //creating an invisible element 
+      var element = document.createElement('a');
+      element.setAttribute('href',
+        'data:text/plain;charset=utf-8, ' +
+        encodeURIComponent(text));
+      element.setAttribute('download', file);
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    }
 
     // If user want to load predefined shapes
-    function handleImportShapes(evt) {
+    function onImportShapes(evt) {
       reader = new FileReader();
       reader.readAsText(evt.target.files[0]);
-      reader.onload = function(e) {
+      reader.onload = function (e) {
         // console.log(reader.result);
         shapes = JSON.parse(reader.result);
         jsonloaded = true;
       }
     }
-    document.getElementById('import_shapes').addEventListener('change', handleImportShapes, false);
+    document.getElementById('import_shapes').addEventListener('change', onImportShapes, false);
+
+    // Load pdf file
+    function onLoadPdf(evt) {
+      reader = new FileReader();
+      reader.readAsArrayBuffer(evt.target.files[0]);
+      reader.onload = function (e) {
+        console.log(reader.result);
+      }
+    }
+    document.getElementById('load_pdf').addEventListener('change', onLoadPdf, false);
 
     // Convert datafile extracted from Google Vision to local format
     function loadJson(jsonfile) {
@@ -275,44 +324,47 @@
       jsonloaded = true;
     }
 
+    function convertPdf() {};
+
+    // used to calc canvas position relative to window
+    function reOffset() {
+      var BB = overlay.getBoundingClientRect();
+      offsetX = BB.left;
+      offsetY = BB.top;
+    };
+    reOffset();
+    window.onscroll = function (e) {
+      reOffset();
+    }
+    window.onresize = function (e) {
+      reOffset();
+    }
+    canvas.onresize = function (e) {
+      reOffset();
+    }
+
+    // clear the canvas and 
+    // redraw all shapes in their current positions every 10ms
+    function drawAll() {
+      overlayctx.clearRect(0, 0, overlay.width, overlay.height)
+      for (var i = 0; i < shapes[pageNum - 1].length; i++) {
+        shape = shapes[pageNum - 1][i];
+        overlayctx.lineWidth = 1;
+        overlayctx.strokeStyle = shape.color;
+        if (i == selectedShapeIndex) {
+          overlayctx.lineWidth = 2;
+        }
+        // convert coords to relative distance
+        overlayctx.strokeRect(shape.x, shape.y, shape.dx, shape.dy);
+      }
+    };
+
     // Annotator
     // https://riptutorial.com/html5-canvas/example/18918/dragging-circles---rectangles-around-the-canvas
     function annotate(num) {
       refreshOverlay = setInterval(drawAll, 500);
       overlay.width = canvas.width;
       overlay.height = canvas.height;
-      // used to calc canvas position relative to window
-      function reOffset() {
-        var BB = overlay.getBoundingClientRect();
-        offsetX = BB.left;
-        offsetY = BB.top;
-      };
-      reOffset();
-      window.onscroll = function (e) {
-        reOffset();
-      }
-      window.onresize = function (e) {
-        reOffset();
-      }
-      canvas.onresize = function (e) {
-        reOffset();
-      }
-
-      // clear the canvas and 
-      // redraw all shapes in their current positions every 10ms
-      function drawAll() {
-        overlayctx.clearRect(0, 0, overlay.width, overlay.height)
-        for (var i = 0; i < shapes[pageNum - 1].length; i++) {
-          shape = shapes[pageNum - 1][i];
-          overlayctx.lineWidth = 1;
-          overlayctx.strokeStyle = shape.color;
-          if (i == selectedShapeIndex) {
-            overlayctx.lineWidth = 2;
-          }
-          // convert coords to relative distance
-          overlayctx.strokeRect(shape.x, shape.y, shape.dx, shape.dy);
-        }
-      };
 
       overlay.addEventListener('mousedown', e => {
         selectedShapeIndex = false
@@ -333,7 +385,6 @@
       });
 
       overlay.addEventListener('mousemove', e => {
-        return;
         // return if we're not dragging
         if (!isDragging) {
           return
@@ -357,7 +408,6 @@
       });
 
       overlay.addEventListener('mouseup', e => {
-        return;
         // avoid double event
         if (!isDragging) {
           return
@@ -455,26 +505,9 @@
       items[i].addEventListener("click", changeColor);
     }
 
-    function download(file, text) {
-      //creating an invisible element 
-      var element = document.createElement('a');
-      element.setAttribute('href',
-        'data:text/plain;charset=utf-8, ' +
-        encodeURIComponent(text));
-      element.setAttribute('download', file);
-
-      // Above code is equivalent to 
-      // <a href="path of file" download="file name"> 
-
-      document.body.appendChild(element);
-
-      //onClick property 
-      element.click();
-
-      document.body.removeChild(element);
-    }
-
     window.addEventListener("load", function () {
+
+
       /**
        * Asynchronously downloads PDF.
        */
