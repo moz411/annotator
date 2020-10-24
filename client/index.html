@@ -304,34 +304,28 @@
           body: reader.result
         }).then(async function waitResult() {
           console.log('Processing...');
-          await sleep(60);
-          // url = 'https://storage.googleapis.com/storage/v1/b/' + bucket_output + '/o/' + uuid +
-          // '.pdf/output-1-to-' + numPages + '.json';
+          await sleep(10);
           url = 'https://storage.googleapis.com/download/storage/v1/b/' + bucket_output + '/o/' + uuid +
           '.pdf%2Foutput-1-to-' + numPages + '.json?&alt=media';
           loadJson(url);
+          annotate(1);
         });
       }
     }
     document.getElementById('load_pdf').addEventListener('change', onLoadPdf, false);
 
-    function fetchRetry(url, options = {}, retries = 10, backoff = 10000) {
+    async function fetchRetry(url, options = {}, retries = 10, backoff = 10000) {
       /* 1 */
       const retryCodes = [404, 408, 500, 502, 503, 504, 522, 524]
-      return fetch(url, options)
-        .then(res => {
-          if (res.ok) return res.json()
-
-          if (retries > 0 && retryCodes.includes(res.status)) {
-            setTimeout(() => {
-              /* 2 */
-              return fetchRetry(url, options, retries - 1, backoff * 2) /* 3 */
-            }, backoff) /* 2 */
-          } else {
-            throw new Error(res)
-          }
-        })
-        .catch(console.error)
+      while(true) {
+        var res = await fetch(url, options).catch(console.error);
+        if(res.ok) {return res.json()}
+        if(retryCodes.includes(res.status)) {
+          console.log('Retrying');
+          await sleep(10);
+        }
+        else {return false};
+      }
     };
 
     // Convert datafile extracted from Google Vision to local format
@@ -365,9 +359,9 @@
               });
             }
           };
-          jsonloaded = true;
           // redraw all shapes in their current positions every 5ms
           refreshOverlay = setInterval(drawAll, 500);
+          return true;
         }).catch(console.error);
     };
 
