@@ -8,10 +8,14 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@google-cloud/storage": "^5.3.0",
     "@google-cloud/vision": "^2.1.2",
     "colormap": "^2.3.1",
+    "compressing": "^1.5.1",
     "express": "^4.16.1",
+    "google-cloud-storage": "^2.0.2",
     "jslint": "^0.12.1",
+    "pump": "^3.0.0",
     "require": "^2.4.20"
   }
 }

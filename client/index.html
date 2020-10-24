@@ -6,10 +6,8 @@
   <meta charset="UTF-8">
   <title>Annotator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/7.21.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/7.21.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/7.21.1/firebase-firestore.js"></script>
-
+  <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-storage.js"></script>
 
   <style>
     body {
@@ -94,7 +92,13 @@
 
 <body>
   <div class="flex-container">
-    <div class="sidebar" hidden>
+
+    <div id="dropbox" class="dropbox" visible>
+      <input type="file" id="load_pdf" accept="application/pdf" style="display: none;">
+      <input type="button" value="Select a pdf file" onclick="document.getElementById('load_pdf').click();" />
+    </div>
+
+    <div id="sidebar" class="sidebar" hidden>
       <br />
       <ul>
         <li class="annotator" style="background-color: #2678B2">Titre 1</li>
@@ -109,20 +113,14 @@
       </ul>
     </div>
 
-    <div class="dropbox">
-      <input type="file" id="load_pdf" accept="application/pdf" style="display: none;">
-      <input type="button" value="Select a pdf file" onclick="document.getElementById('load_pdf').click();" />
-    </div>
-
-
-    <div class="content" hidden>
+    <div id="content" class="content" hidden>
       <div id="container">
         <canvas id="pdfcanvas"></canvas>
         <canvas id="overlay"></canvas>
       </div>
     </div>
 
-    <div class="right" hidden>
+    <div id="right" class="right" hidden>
       <span class="span">Page: <span id="page_num"></span> / <span id="page_count"></span></span><br>
       <button class="button" id="prev">Previous</button>
       <button class="button" id="next">Next</button><br>
@@ -140,6 +138,9 @@
     var url = 'http://localhost:8080/dataset/MachineLearningForDummies/extract.pdf',
       jsonfile = 'http://localhost:8080/dataset/MachineLearningForDummies/output-1-to-12.json',
       shapes_filename = 'shapes.json',
+      uuid = null,
+      bucket_input = 'annotator-input',
+      bucket_output = 'annotator-output',
       pdfDoc = null,
       pageNum = 1,
       pageRendering = false,
@@ -241,6 +242,7 @@
       download(shapes_filename, text);
     }
     document.getElementById('export_shapes').addEventListener('click', onExportShapes);
+
     // Show the export as downloadable file
     function download(file, text) {
       //creating an invisible element 
@@ -266,12 +268,56 @@
     }
     document.getElementById('import_shapes').addEventListener('change', onImportShapes, false);
 
-    // Load pdf file
-    function onLoadPdf(evt) {
+    function genuuid() {
+      const url = URL.createObjectURL(new Blob())
+      const [id] = url.toString().split('/').reverse()
+      URL.revokeObjectURL(url)
+      return id
+    }
+
+    function sleep(s) {
+      return new Promise(resolve => setTimeout(resolve, s * 1000));
+    }
+
+    // Load pdf file, annotate it using Google Vision then download resulting json
+    async function onLoadPdf(evt) {
       reader = new FileReader();
       reader.readAsArrayBuffer(evt.target.files[0]);
-      reader.onload = function (e) {
-        console.log(reader.result);
+      reader.onload = async function (e) {
+        // display loaded pdf in browser, waiting for annotation
+        var numPages = displayPdf(reader.result);
+        console.log(numPages);
+        document.getElementById('dropbox').style.display = "none";
+        document.getElementById('sidebar').style.display = "block";
+        document.getElementById('right').style.display = "block";
+        document.getElementById('content').style.display = "block";
+        return;
+
+        // start annotation pipeline
+        console.log('Uploading file');
+        uuid = genuuid();
+        url = 'https://storage.googleapis.com/upload/storage/v1/b/' + bucket_input + '/o?name=' + uuid +
+          '.pdf&uploadType=media';
+        await fetch(url, {
+          method: "POST",
+          body: reader.result
+        }).then(async function waitResult() {
+          console.log('Processing...');
+          await sleep(30);
+          var response_code = 0;
+          var tries = 0;
+          url = 'https://storage.googleapis.com/storage/v1/b/' + bucket_output + '/o/' + uuid + '.gz';
+          do {
+            await fetch(url, {
+              method: "GET"
+            }).then(response => {
+              console.log(response)
+              response_code = response.status;
+            }).catch(console.error);
+            tries++;
+            await sleep(10);
+          } while ((response_code != 200) && (tries < 6));
+        });
       }
     }
     document.getElementById('load_pdf').addEventListener('change', onLoadPdf, false);
@@ -505,23 +551,40 @@
       items[i].addEventListener("click", changeColor);
     }
 
-    window.addEventListener("load", function () {
-
-
-      /**
-       * Asynchronously downloads PDF.
-       */
-      pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {
+    function displayPdf(pdfbytes) {
+      pdfjsLib.getDocument({
+        data: pdfbytes
+    }).promise.then(function (pdfDoc_) {
         pdfDoc = pdfDoc_;
         document.getElementById('page_count').textContent = pdfDoc.numPages;
         // Initial/first page rendering
         renderPage(pageNum);
-      }).catch(function (error) {
-        console.log(error)
-      });
-    });
-  </script>
+        return pdfDoc.numPages;
+      }).catch(console.error);
+    };
 
+    function initFirebaseStorage() {
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      var firebaseConfig = {
+        apiKey: "AIzaSyB8UvV8VQn4bG2q7I3tNZERuw7OAOjbrtA",
+        authDomain: "crypto-monolith-292620.firebaseapp.com",
+        databaseURL: "https://crypto-monolith-292620.firebaseio.com",
+        projectId: "crypto-monolith-292620",
+        storageBucket: "crypto-monolith-292620.appspot.com",
+        messagingSenderId: "149924947744",
+        appId: "1:149924947744:web:c40e9a1d11f2a3c8b05945",
+        measurementId: "G-QKSJMQZMWF"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+
+      // Get a reference to the storage service, which is used to create references in your storage bucket
+      var storage = firebase.storage();
+      // Return a storage reference from our storage service
+      return storage.ref();
+    }
+  </script>
 </body>
 
 </html>

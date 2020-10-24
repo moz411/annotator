@@ -1,0 +1,374 @@
+[
+    [{
+        "x": 73.99999728,
+        "y": 128.00000196,
+        "dx": 245.99999952000002,
+        "dy": 142.99999344,
+        "text": "MachineLearning ",
+        "color": "rgb(38, 120, 178)",
+        "label": "Titre 1"
+    }, {
+        "x": 99,
+        "y": 392.00001480000003,
+        "dx": 201.999996,
+        "dy": 35.99998199999999,
+        "text": "by Judith Hurwitz and ",
+        "color": "rgb(147, 106, 187)",
+        "label": "Auteur"
+    }, {
+        "x": 116.99999387999999,
+        "y": 509.0000328,
+        "dx": 160.00001028000003,
+        "dy": 32.99995799999999,
+        "text": "dummies ",
+        "color": "rgb(38, 120, 178)",
+        "label": "Titre 1"
+    }],
+    [],
+    [],
+    [{
+        "x": 41.000000184,
+        "y": 40.000001759999996,
+        "dx": 168.999987816,
+        "dy": 23.99999922,
+        "text": "Introduction ",
+        "color": "rgb(253, 127, 40)",
+        "label": "Titre 2"
+    }, {
+        "x": 85.99999715999999,
+        "y": 81.00000539999999,
+        "dx": 270.00000323999996,
+        "dy": 102.99999780000002,
+        "text": "achine learning is having a dramatic impact on the waysoftware is designed so that it can keep pace with busi",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 85.99999715999999,
+        "y": 192.99999563999998,
+        "dx": 270.00000323999996,
+        "dy": 56.00000124000002,
+        "text": "The value of machine learning is that it allows you to continuallylearn from data and predict the future. This powerful set of algorithms and models are being used across industries to improveprocesses and gain insights into patterns and anomalies withindata. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 87.00000012,
+        "y": 259.9999992,
+        "dx": 269.00000028,
+        "dy": 56.99999088000004,
+        "text": "But machine learning isn't a solitary endeavor; it's a team processthat requires data scientists, data engineers, business analysts,and business leaders to collaborate. The power of machine learning requires a collaboration so the focus is on solving businessproblems. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 38.000001600000004,
+        "y": 339.0000192,
+        "dx": 126.00000071999999,
+        "dy": 13.99997123999998,
+        "text": "About This Book ",
+        "color": "rgb(253, 127, 40)",
+        "label": "Titre 2"
+    }, {
+        "x": 85.99999715999999,
+        "y": 369.99999792,
+        "dx": 270.00000323999996,
+        "dy": 103.99999968000003,
+        "text": "Machine Learning For Dummies, IBM Limited Edition, gives youinsights into what machine learning is all about and how it canimpact the way you can weaponize data to gain unimaginableinsights. Your data is only as good as what you do with it and howyou manage it. In this book, you discover types of machine learning techniques, models, and algorithms that can help achieveresults for your company. This information helps both businessand technical leaders learn how to apply machine learning toanticipate and predict the future. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }],
+    [{
+        "x": 38.000001600000004,
+        "y": 180.99999756,
+        "dx": 306.99999,
+        "dy": 97.99999451999997,
+        "text": "Chapter 1Understanding MachineLearning ",
+        "color": "rgb(253, 127, 40)",
+        "label": "Titre 2"
+    }, {
+        "x": 85.99999715999999,
+        "y": 308.99999340000005,
+        "dx": 270.00000323999996,
+        "dy": 150.00000659999995,
+        "text": "achine learning, artificial intelligence (AI), and cognitivecomputing are dominating conversations about how ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }],
+    [{
+        "x": 38.000001600000004,
+        "y": 37.999999836,
+        "dx": 206.99999100000002,
+        "dy": 19.999999044000006,
+        "text": "What Is Machine Learning? ",
+        "color": "rgb(51, 159, 52)",
+        "label": "Titre 3"
+    }, {
+        "x": 85.99999715999999,
+        "y": 72.00000072,
+        "dx": 270.00000323999996,
+        "dy": 136.00001088,
+        "text": "Machine learning has become one of the most important topicswithin development organizations that are looking for innovativeways to leverage data assets to help the business gain a new levelof understanding. Why add machine learning into the mix? Withthe appropriate machine learning models, organizations havethe ability to continually predict changes in the business so thatthey are best able to predict what's next. As data is constantlyadded, the machine learning models ensure that the solution isconstantly updated. The value is straightforward: If you use themost appropriate and constantly changing data sources in thecontext of machine learning, you have the opportunity to predictthe future. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 85.99999715999999,
+        "y": 218.99999556,
+        "dx": 270.00000323999996,
+        "dy": 33.9999966,
+        "text": "Machine learning is a form of AI that enables a system to learnfrom data rather than through explicit programming. However,machine learning is not a simple process. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 85.99999715999999,
+        "y": 262.9999926,
+        "dx": 270.00000323999996,
+        "dy": 125.00002080000007,
+        "text": "Machine learning uses a variety of algorithms that iterativelylearn from data to improve, describe data, and predict outcomes.As the algorithms ingest training data, it is then possible to produce more precise models based on that data. A machine learning model is the output generated when you train your machinelearning algorithm with data. After training, when you provide amodel with an input, you will be given an output. For example, apredictive algorithm will create a predictive model. Then, whenyou provide the predictive model with data, you will receive a prediction based on the data that trained the model. Machine learning is now essential for creating analytics models. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 85.99999715999999,
+        "y": 399.0000096,
+        "dx": 270.00000323999996,
+        "dy": 102.00002039999998,
+        "text": "You likely interact with machine learning applications withoutrealizing. For example, when you visit an e-commerce site andstart viewing products and reading reviews, you're likely presented with other, similar products that you may find interesting.These recommendations aren't hard coded by an army of developers. The suggestions are served to the site via a machine learning model. The model ingests your browsing history along withother shoppers' browsing and purchasing data in order to presentother similar products that you may want to purchase. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }],
+    [{
+        "x": 87.00000012,
+        "y": 41.00000364,
+        "dx": 269.00000028,
+        "dy": 22.999997339999993,
+        "text": "are seeing major advancements and commercial solutions. Whyhas the market become real? There are six key enablers: ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 92.99999808,
+        "y": 77.000004,
+        "dx": 245.99999951999996,
+        "dy": 271.9999728,
+        "text": "\u00bb Modern processors have become increasingly powerful and ",
+        "color": "rgb(175, 200, 231)",
+        "label": "Tableau"
+    }, {
+        "x": 39.9999996,
+        "y": 377.9999946,
+        "dx": 131.0000076,
+        "dy": 18.00001548000006,
+        "text": "Defining Big Data ",
+        "color": "rgb(51, 159, 52)",
+        "label": "Titre 3"
+    }, {
+        "x": 85.99999715999999,
+        "y": 411.00000156,
+        "dx": 270.00000323999996,
+        "dy": 21.999974039999984,
+        "text": "Big data is any kind of data source that has at least one of fourshared characteristics, called the four Vs: ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 92.99999808,
+        "y": 445.99999392,
+        "dx": 223.00000272,
+        "dy": 55.999982880000005,
+        "text": "\u00bb Extremely large Volumes of data\u00bb The ability to move that data at a high Velocity of speed\u00bb An ever-expanding Variety of data sources\u00bb Veracity so that data sources truly represent truth ",
+        "color": "rgb(175, 200, 231)",
+        "label": "Tableau"
+    }, {
+        "x": 87.00000012,
+        "y": 514.99999512,
+        "dx": 269.00000028,
+        "dy": 22.999988160000044,
+        "text": "The accuracy of a machine learning model can increase substantially if it's trained on big data. Without enough data, you are ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }],
+    [{
+        "x": 85.99999715999999,
+        "y": 42.000001848000004,
+        "dx": 270.00000323999996,
+        "dy": 45.000002591999994,
+        "text": "broadest way of describing systems that can \u201cthink.\u201d For example, thermostats that learn your preference or applications thatcan identify people and what they are doing in photographs canbe thought of as Al systems. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 85.99999715999999,
+        "y": 97.00000487999999,
+        "dx": 270.00000323999996,
+        "dy": 44.999992800000015,
+        "text": "As illustrated in Figure 1-1, there are four main subsets of Al. Inthis book, we focus on machine learning. However, in orderto understand machine learning, it is important to put it inperspective. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 87.00000012,
+        "y": 330.00000839999996,
+        "dx": 249.99999948000004,
+        "dy": 19.999976400000094,
+        "text": "FIGURE 1-1: Al is the overall category that includes machine learning andnatural language processing. ",
+        "color": "rgb(216, 63, 68)",
+        "label": "L\u00e9gende"
+    }, {
+        "x": 85.99999715999999,
+        "y": 363.00000312,
+        "dx": 270.00000323999996,
+        "dy": 45.00001728000001,
+        "text": "When we explore machine learning, we focus on the ability tolearn and adapt a model based on the data rather than explicitprogramming. In Chapter 6, we focus on applying machine learning to solving business problems. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 94.00000104,
+        "y": 453.9999906,
+        "dx": 245.99998764,
+        "dy": 79.00002611999997,
+        "text": "\u00bb Reasoning: Machine reasoning allows a system to make ",
+        "color": "rgb(175, 200, 231)",
+        "label": "Tableau"
+    }],
+    [{
+        "x": 35.99999964,
+        "y": 160.00000703999999,
+        "dx": 229.99999967999997,
+        "dy": 95.99999688,
+        "text": "Chapter 2Applying MachineLearning ",
+        "color": "rgb(253, 127, 40)",
+        "label": "Titre 2"
+    }, {
+        "x": 85.99999715999999,
+        "y": 286.99999488000003,
+        "dx": 270.00000323999996,
+        "dy": 81.00001151999999,
+        "text": "ith machine learning, you have the opportunity to usethe data generated by your business to anticipate busi",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 39.0000006,
+        "y": 388.00001340000006,
+        "dx": 238.00000356,
+        "dy": 18.999998999999946,
+        "text": "Getting Started with a Strategy ",
+        "color": "rgb(51, 159, 52)",
+        "label": "Titre 3"
+    }, {
+        "x": 85.99999715999999,
+        "y": 421.000002,
+        "dx": 270.00000323999996,
+        "dy": 112.99998600000004,
+        "text": "Before you can define the strategy, you have to understand theproblem that you're trying to solve. As businesses go throughmajor strategy transitions, certain challenges present themselves.What is the status of existing business and existing customerengagement? What does the future hold for what customers willbuy and expect from you in the future? The obvious answer is toask customers if they are happy and what they will purchase inthe future. While this is a sound starting point, it is not enough.Customers that are happy one minute become unhappy whensomething transformational comes along. If you do traditional ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }],
+    [{
+        "x": 92.99999808,
+        "y": 40.000001759999996,
+        "dx": 245.00000052000001,
+        "dy": 134.00000712,
+        "text": "assessing your future. All of this data has the potential to ",
+        "color": "rgb(175, 200, 231)",
+        "label": "Tableau"
+    }, {
+        "x": 85.99999715999999,
+        "y": 186.9999966,
+        "dx": 270.00000323999996,
+        "dy": 67.99999932,
+        "text": "While machine learning has captured the attention of the technology and business market, you want to make sure that youselect the approach and tools that best match the problem youneed to solve. There will be different approaches depending onyour industry and the type of data you're dealing with and thetype of results you're looking to achieve. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 85.99999715999999,
+        "y": 264.0000006,
+        "dx": 270.00000323999996,
+        "dy": 91.00000583999997,
+        "text": "For many organizations, being able to understand the hidden patterns within their data offers a huge potential advantage. Mostcompanies have important data that is stored in silos across different business units. Some of the important data may be foundin social media sources. Data may also be found in unstructureddata sources such as documents related to new research findings.Data is also found in semi-structured sources such as sensor andIoT-based systems. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 85.99999715999999,
+        "y": 364.99998239999996,
+        "dx": 270.00000323999996,
+        "dy": 78.00001200000003,
+        "text": "Your first task is to determine what data sources and types of dataare best suited to solving your problem. After you understand this,you will be in a good position to determine which algorithms willbe used to create the most appropriate models. While there arehundreds of use cases to illustrate how to use machine learningalgorithms to solve specific problems, we give you three examplesin this section. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 85.99999715999999,
+        "y": 456.00000659999995,
+        "dx": 270.00000323999996,
+        "dy": 77.99998140000008,
+        "text": "Bringing data silos togetherYou are in a competitive market with a lot of emerging companiesdetermined to disrupt the market. Therefore, you have to figureout a way to understand the subtle changes to customer preferences and requirements. While you are diligent about conductingcustomer surveys and responding to customer complaints, this ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }],
+    [{
+        "x": 39.0000006,
+        "y": 274.00000104,
+        "dx": 280.000017,
+        "dy": 102.00000816,
+        "text": "Ten Predictions onthe Future of MachineLearning ",
+        "color": "rgb(253, 127, 40)",
+        "label": "Titre 2"
+    }, {
+        "x": 85.99999715999999,
+        "y": 399.0000096,
+        "dx": 270.00000323999996,
+        "dy": 92.00000160000002,
+        "text": "achine learning is emerging as one of the most important developments in the software industry. While this ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }],
+    [{
+        "x": 87.00000012,
+        "y": 41.00000364,
+        "dx": 269.00000028,
+        "dy": 90.99999971999999,
+        "text": "adding automation, technical users will be able to focus on morechallenging work rather than simply automating repetitive tasks.There are many tedious details involved with machine learning thatare important but ripe for automation (for example, data cleaning).Data visualization is another area where automation is helping tostreamline the machine learning process. Systems can be designedto select the most appropriate visualization for a given data set,making it easy to understand the relationship between data points. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 39.0000006,
+        "y": 154.000008,
+        "dx": 294.99999407999996,
+        "dy": 37.99999799999998,
+        "text": "Specialized Hardware Will Improve thePerformance of Machine Learning ",
+        "color": "rgb(51, 159, 52)",
+        "label": "Titre 3"
+    }, {
+        "x": 85.99999715999999,
+        "y": 206.00000784,
+        "dx": 270.00000323999996,
+        "dy": 68.99998895999997,
+        "text": "We are approaching an era where sophisticated hardware is nowaffordable. Therefore, many organizations can procure hardwarethat is powerful enough to quickly process machine learningalgorithms. In addition, this powerful hardware removes the processing bottleneck of machine learning, thus allowing machinelearning to be embedded in more applications. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 85.99999715999999,
+        "y": 284.0000076,
+        "dx": 270.00000323999996,
+        "dy": 113.99999399999996,
+        "text": "Traditionally, CPUs have been used to support the deep learningtraining process with mixed results. These CPUs are problematicbecause of the cumbersome way that they process steps in a neural network. In contrast, GPUs have hundreds of simpler coresthat allow thousands of concurrent hardware threads. Because ofthe importance of GPUs in deep learning applications, there hasbeen considerable research going into the technology in order tooffer more powerful chips. Cloud computing vendors also recognize the value of GPUs, and more of them are offering GPU environments on the cloud. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 87.00000012,
+        "y": 408.0000204,
+        "dx": 269.00000028,
+        "dy": 45.99997020000001,
+        "text": "In addition to GPUs, researchers are using Field-ProgrammableGate Arrays (FPGAs) to successfully run machine learning workloads. Sometimes FPGAs outperform GPUs when running neuralnetwork and deep learning operations. ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }, {
+        "x": 38.000001600000004,
+        "y": 475.0000056,
+        "dx": 264.9999924,
+        "dy": 36.99998999999997,
+        "text": "Automate Algorithm Selection andTesting Algorithms ",
+        "color": "rgb(51, 159, 52)",
+        "label": "Titre 3"
+    }, {
+        "x": 87.00000012,
+        "y": 528.0000012,
+        "dx": 269.00000028,
+        "dy": 21.999992399999883,
+        "text": "Data scientists typically need to understand how to use dozensof specific machine learning algorithms. In Chapter 3, we discuss ",
+        "color": "rgb(253, 234, 126)",
+        "label": "Paragraphe"
+    }]
+]

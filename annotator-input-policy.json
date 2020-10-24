@@ -1,0 +1,37 @@
+{
+  "bindings": [
+    {
+      "members": [
+        "projectEditor:crypto-monolith-292620",
+        "projectOwner:crypto-monolith-292620"
+      ],
+      "role": "roles/storage.legacyBucketOwner"
+    },
+    {
+      "members": [
+        "projectViewer:crypto-monolith-292620"
+      ],
+      "role": "roles/storage.legacyBucketReader"
+    },
+    {
+      "members": [
+        "projectEditor:crypto-monolith-292620",
+        "projectOwner:crypto-monolith-292620"
+      ],
+      "role": "roles/storage.legacyObjectOwner"
+    },
+    {
+      "members": [
+        "projectViewer:crypto-monolith-292620"
+      ],
+      "role": "roles/storage.legacyObjectReader"
+    },
+    {
+      "members": [
+        "allUsers"
+      ],
+      "role": "roles/storage.objectCreator"
+    }
+  ],
+  "etag": "CAM="
+}

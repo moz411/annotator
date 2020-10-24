@@ -1,0 +1,26 @@
+{ str: 'Learning',
+  dir: 'ltr',
+  width: 251.874,
+  height: 63,
+  transform: [ 63, 0, 0, 63, 70.5042, 355.1848 ],
+  fontName: 'g_d0_f8' }
+
+
+  [ { x: 66.00000028,
+    y: 123.00000195999999,
+    dx: 273.00000732,
+    dy: 157.99999344,
+    color: 'rgb(38, 120, 178)',
+    label: 'Titre 1' }, 
+
+
+LTTextContainer
+['_is_centrally_aligned_with', '_is_left_aligned_with', '_is_right_aligned_with', '_is_same_height_as', 
+'_objs', '_x1', 'add', 'analyze', 'bbox', 'extend', 'find_neighbors', 'get_text', 'hdistance',
+ 'height', 'hoverlap', 'is_empty', 'is_hoverlap', 'is_voverlap', 'set_bbox', 'vdistance', 'voverlap',
+  'width', 'word_margin', 'x0', 'x1', 'y0', 'y1']
+
+character
+['_text', 'adv', 'analyze', 'bbox', 'fontname', 'get_text', 'graphicstate', 'hdistance', 'height', 'hoverlap', 
+'is_compatible', 'is_empty', 'is_hoverlap', 'is_voverlap', 'matrix', 'ncs', 'set_bbox', 'size', 'upright',
+ 'vdistance', 'voverlap', 'width', 'x0', 'x1', 'y0', 'y1']

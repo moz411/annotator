@@ -8,8 +8,8 @@ const HOST = '127.0.0.1';
 
 // App
 const app = express();
-app.use('/favicon.ico', express.static('/favicon.ico'));
-app.use('/lib', express.static('lib'));
+app.use('/favicon.ico', express.static('client/favicon.ico'));
+app.use('/lib', express.static('client/lib'));
 app.use('/dataset', express.static('dataset'));
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/client/index.html');
