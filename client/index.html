@@ -61,7 +61,7 @@
       height: 100vh;
       position: absolute;
       top: 10vh;
-      right: 20%;
+      right: 5%;
     }
 
     .button {
@@ -135,24 +135,23 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
 
-    var url = 'http://localhost:8080/dataset/MachineLearningForDummies/extract.pdf',
-      jsonfile = 'http://localhost:8080/dataset/MachineLearningForDummies/output-1-to-12.json',
-      shapes_filename = 'shapes.json',
-      uuid = null,
+    var uuid = genuuid(),
+      url = null,
       bucket_input = 'annotator-input',
       bucket_output = 'annotator-output',
       pdfDoc = null,
-      pageNum = 1,
+      jsonData = null,
+      shapes = [],
       numPages = null,
       pageRendering = false,
       pageNumPending = null,
+      pageNum = 1,
       scale = 1,
       marge = 0,
       canvas = document.getElementById('pdfcanvas'),
       ctx = canvas.getContext('2d'),
       overlay = document.getElementById('overlay'),
       overlayctx = overlay.getContext('2d'),
-      shapes = [],
       isDragging = false,
       selectedShapeIndex = false,
       jsonloaded = false,
@@ -160,73 +159,140 @@
       x, y, dx, dy, newX, newY,
       offsetX, offsetY, cornerX, cornerY;
 
-    // Load pdf file, send it to gcs then download resulting json
-    async function onLoadPdf(evt) {
+    // Load pdf file
+    function onLoadPdf(evt) {
+      // hide dropbox and make elements visible
+      document.getElementById('dropbox').style.display = "none";
+      document.getElementById('sidebar').style.display = "block";
+      document.getElementById('right').style.display = "block";
+      document.getElementById('content').style.display = "block";
+
+      upload_url = 'https://storage.googleapis.com/upload/storage/v1/b/' + bucket_input + '/o?name=' +
+        uuid + '.pdf&uploadType=media';
+      download_url = 'https://storage.googleapis.com/download/storage/v1/b/' + bucket_output + '/o/' +
+        uuid + '.pdf%2Foutput-1-to-' + numPages + '.json?&alt=media';
+
+
       reader = new FileReader();
       reader.readAsArrayBuffer(evt.target.files[0]);
-      reader.onload = async function (e) {
-
-        // hide dropbox and make elements visible
-        document.getElementById('dropbox').style.display = "none";
-        document.getElementById('sidebar').style.display = "block";
-        document.getElementById('right').style.display = "block";
-        document.getElementById('content').style.display = "block";
-        // display loaded pdf in browser, waiting for annotation
-        await displayPdf(reader.result);
-
-        // // start annotation pipeline
-        // console.log('Uploading file');
-        // uuid = genuuid();
-        // url = 'https://storage.googleapis.com/upload/storage/v1/b/' + bucket_input + '/o?name=' + uuid +
-        //   '.pdf&uploadType=media';
-        // await fetch(url, {
-        //   method: "POST",
-        //   body: reader.result
-        // }).then(async function waitResult() {
-        //   console.log('Processing...');
-        //   await sleep(10);
-        //   url = 'https://storage.googleapis.com/download/storage/v1/b/' + bucket_output + '/o/' + uuid +
-        //     '.pdf%2Foutput-1-to-' + numPages + '.json?&alt=media';
-        //   loadJson(url);
-        // });
-
-        // Add listeners on labels
-        var items = document.getElementsByClassName("annotator");
-        for (var i = 0; i < items.length; i++) {
-          items[i].addEventListener("click", changeColor);
-        };
-        // redraw all shapes in their current positions every 5ms
-        refreshOverlay = setInterval(drawAll, 500);
-
-        // make overlay layer annotable
-        annotate();
-      }
-    }
+      reader.onload = async function () {
+        // upload pdf file to gcs bucket
+        displayPdf(reader.result);
+        await postDocument(reader.result);
+        await getJsonData();
+        loadJsonData();
+        annotators();
+      };
+    };
     document.getElementById('load_pdf').addEventListener('change', onLoadPdf, false);
 
     // instanciate the pdfDoc variable
-    function displayPdf(pdfbytes) {
+    function displayPdf(pdfData) {
+      console.log("Rendering document");
       pdfjsLib.getDocument({
-        data: pdfbytes
-      }).promise.then(function (pdfDoc_) {
+        data: pdfData
+      }).promise.then(async function (pdfDoc_) {
         pdfDoc = pdfDoc_;
         numPages = pdfDoc.numPages;
         document.getElementById('page_count').textContent = numPages;
         // Initial/first page rendering
         renderPage(pageNum);
-      }).catch(console.error);
+      });
+    };
+
+    async function postDocument(pdfData) {
+      // start annotation pipeline
+        console.log("Uploading file");
+        upload_url = 'https://storage.googleapis.com/upload/storage/v1/b/' + bucket_input + '/o?name=' +
+          uuid + '.pdf&uploadType=media';
+
+        // upload pdf file to gcs bucket
+        await fetch(upload_url, {
+            method: "POST",
+            body: pdfData
+          })
+    };
+
+    function timeout(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms * 1000));
+    }
+
+    async function getJsonData(retries = 10, backoff = 10) {
+      const retryCodes = [404, 408, 500, 502, 503, 504, 522, 524];
+      //uuid = "1e9e1c3d-4d9d-4971-a62c-4f9ce2e2888d";
+      //numPages = 1;
+      download_url = 'https://storage.googleapis.com/download/storage/v1/b/' + bucket_output + '/o/' +
+        uuid + '.pdf%2Foutput-1-to-' + numPages + '.json?&alt=media';
+      console.log("Downloading annotations");
+      await timeout(backoff);
+      let res = await fetch(download_url);
+      if (retries > 0 && retryCodes.includes(res.status)) {
+        console.log("Retrying");
+        await getJsonData(retries - 1)
+      } else {
+        let response = await res.json();
+        jsonData = response.responses;
+      }
+    };
+
+    function annotators() {
+      // Add listeners on labels
+      var items = document.getElementsByClassName("annotator");
+      for (var i = 0; i < items.length; i++) {
+        items[i].addEventListener("click", changeColor);
+      };
+      // redraw all shapes in their current positions every 5ms
+      refreshOverlay = setInterval(drawAll, 500);
+      // make overlay layer annotable
+      annotate();
+    };
+
+
+    // Convert datafile generated by Google Vision to local format
+    function loadJsonData() {
+      // get generated json
+      //let shapes = [];
+      for (var i = 0; i < jsonData.length; i++) {
+        shapes[i] = [];
+        var blocks = jsonData[i].fullTextAnnotation.pages[0].blocks;
+        for (var j = 0; j < blocks.length; j++) {
+          var coords = blocks[j].boundingBox.normalizedVertices;
+          coords = coords.map(function (element) {
+            return [element.x * overlay.width,
+              element.y * overlay.height
+            ]
+          });
+          // convert normalizedVertices to regular coords
+          x = coords[0][0] - marge;
+          y = coords[0][1] - marge;
+          dx = coords[2][0] + marge * 2 - x;
+          dy = coords[2][1] + marge * 2 - y;
+          shapes[i].push({
+            x,
+            y,
+            dx,
+            dy,
+            color
+          });
+        }
+      };
     };
 
     // Get page info from document, resize canvas accordingly, and render page.
     function renderPage(num) {
       pageRendering = true;
       // Using promise to fetch the page
-      pdfDoc.getPage(num).then(function (page) {
+      pdfDoc.getPage(num).then(async function (page) {
         var viewport = page.getViewport({
           scale: scale
         });
+        // resize canvas
         canvas.height = viewport.height;
         canvas.width = viewport.width;
+        // resize overlay
+        overlay.width = viewport.width;
+        overlay.height = viewport.height;
+
 
         // Render PDF page into canvas context
         var renderContext = {
@@ -236,17 +302,13 @@
         var renderTask = page.render(renderContext);
 
         // Wait for rendering to finish
-        renderTask.promise.then(function () {
+        renderTask.promise.then(async function () {
           pageRendering = false;
           if (pageNumPending !== null) {
             // New page rendering is pending
             renderPage(pageNumPending);
             pageNumPending = null;
           }
-
-          // resize overlay
-          overlay.width = canvas.width;
-          overlay.height = canvas.height;
         });
       });
       // Update page counters
@@ -288,7 +350,7 @@
     // Export shapes array to file
     function onExportShapes() {
       var text = JSON.stringify(shapes);
-      download(shapes_filename, text);
+      download(uuid + '.json', text);
     }
     document.getElementById('export_shapes').addEventListener('click', onExportShapes);
 
@@ -326,63 +388,9 @@
     }
 
     // emulate the sleep function
-    function sleep(s) {
-      return new Promise(resolve => setTimeout(resolve, s * 1000));
+    function sleep(time) {
+      return new Promise(resolve => setTimeout(resolve, time * 1000));
     }
-
-    // loop until the Google Vision json result file is available
-    async function fetchRetry(url, options = {}, retries = 10, backoff = 10) {
-      /* 1 */
-      const retryCodes = [404, 408, 500, 502, 503, 504, 522, 524];
-      var cnt = 0;
-      while (true) {
-        var res = await fetch(url, options).catch(console.error);
-        if (res.ok) {
-          return res.json()
-        }
-        if (retryCodes.includes(res.status) && cnt < retries) {
-          console.log('Retrying');
-          await sleep(backoff);
-          cnt++;
-        } else {
-          return false
-        };
-      }
-    };
-
-    // Convert datafile generated by Google Vision to local format
-    function loadJson(url) {
-      // get generated json
-      console.log("Downloading annotations")
-      fetchRetry(url)
-        .then(response => {
-          for (var i = 0; i < response.responses.length; i++) {
-            shapes[i] = [];
-            var blocks = response.responses[i].fullTextAnnotation.pages[0].blocks;
-
-            for (var j = 0; j < blocks.length; j++) {
-              var coords = blocks[j].boundingBox.normalizedVertices;
-              coords = coords.map(function (element) {
-                return [element.x * overlay.width,
-                  element.y * overlay.height
-                ]
-              });
-              // convert normalizedVertices to regular coords
-              x = coords[0][0] - marge;
-              y = coords[0][1] - marge;
-              dx = coords[2][0] + marge * 2 - x;
-              dy = coords[2][1] + marge * 2 - y;
-              shapes[i].push({
-                x,
-                y,
-                dx,
-                dy,
-                color
-              });
-            }
-          };
-        });
-    };
 
     // used to calculate canvas position relative to window
     function reOffset() {
@@ -417,7 +425,7 @@
     };
 
     // draw and move selection shapes
-    function annotate() {
+    async function annotate(shapes) {
       overlay.addEventListener('mousedown', e => {
         selectedShapeIndex = false
         overlayctx.strokeStyle = 'black';

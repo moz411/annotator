@@ -1,9 +1,7 @@
 {
-    "name": "sample-cloud-storage",
+    "name": "cloud-vision",
     "version": "0.0.1",
     "dependencies": {
-        "@google-cloud/storage": "^2.0.2",
-        "@google-cloud/vision": "^2.1.2",
-        "compressing": "^1.5.1"
+        "@google-cloud/vision": "^2.1.2"
     }
 }
